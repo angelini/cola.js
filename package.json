@@ -5,14 +5,16 @@
   "main": "index.js",
   "dependencies": {
     "backburner.js": "git://github.com/ebryn/backburner.js.git",
-    "browserify": "~2.18.1",
-    "eventemitter2": "~0.4.12"
+    "eventemitter2": "~0.4.12",
+    "underscore": "~1.4.4"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "browserify": "~2.18.1"
+  },
   "scripts": {
     "test": "karma start karma.conf.js"
   },
   "repository": "",
   "author": "Alex Angelini",
-  "license": "MIT",
+  "license": "MIT"
 }

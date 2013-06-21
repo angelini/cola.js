@@ -1,5 +1,5 @@
 // Karma configuration
-// Generated on Fri Jun 21 2013 10:31:05 GMT-0400 (EDT)
+// Generated on Fri Jun 21 2013 18:43:04 GMT-0400 (EDT)
 
 
 // base path, that will be used to resolve files and exclude
@@ -8,9 +8,10 @@ basePath = '';
 
 // list of files / patterns to load in the browser
 files = [
-  QUNIT,
-  QUNIT_ADAPTER,
-  'src/**/*.js'
+  JASMINE,
+  JASMINE_ADAPTER,
+  'dist/bundle.js',
+  'tests/**/*.js'
 ];
 
 
