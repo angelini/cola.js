@@ -1,6 +1,7 @@
 var _             = require('underscore');
 var util          = require('util');
 var EventEmitter  = require('events').EventEmitter;
+var PropertyStack = require('./property_stack');
 
 function ComputedProperty(options) {
   if (_.isFunction(options)) options = {get: options};

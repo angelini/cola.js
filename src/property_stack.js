@@ -10,6 +10,8 @@ PropertyStack.prototype.length = function() { return this.array.length; };
 
 PropertyStack.prototype.peek = function() { return this.array[this.array.length - 1]; };
 
+PropertyStack.prototype.empty = function() { this.array = []; };
+
 PropertyStack.prototype.addDependency = function(property) {
   if (this.array.length === 0) return;
 

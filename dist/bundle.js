@@ -1,4 +1,5 @@
-;(function(e,t,n){function i(n,s){if(!t[n]){if(!e[n]){var o=typeof require=="function"&&require;if(!s&&o)return o(n,!0);if(r)return r(n,!0);throw new Error("Cannot find module '"+n+"'")}var u=t[n]={exports:{}};e[n][0].call(u.exports,function(t){var r=e[n][1][t];return i(r?r:t)},u,u.exports)}return t[n].exports}var r=typeof require=="function"&&require;for(var s=0;s<n.length;s++)i(n[s]);return i})({1:[function(require,module,exports){
+(function(e){if("function"==typeof bootstrap)bootstrap("cola",e);else if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else if("undefined"!=typeof ses){if(!ses.ok())return;ses.makeCola=e}else"undefined"!=typeof window?window.Cola=e():global.Cola=e()})(function(){var define,ses,bootstrap,module,exports;
+return (function(e,t,n){function i(n,s){if(!t[n]){if(!e[n]){var o=typeof require=="function"&&require;if(!s&&o)return o(n,!0);if(r)return r(n,!0);throw new Error("Cannot find module '"+n+"'")}var u=t[n]={exports:{}};e[n][0].call(u.exports,function(t){var r=e[n][1][t];return i(r?r:t)},u,u.exports)}return t[n].exports}var r=typeof require=="function"&&require;for(var s=0;s<n.length;s++)i(n[s]);return i})({1:[function(require,module,exports){
 function PropertyStack() {
   this.array = [];
 }
@@ -10,6 +11,8 @@ PropertyStack.prototype.pop = function() { return this.array.pop(); };
 PropertyStack.prototype.length = function() { return this.array.length; };
 
 PropertyStack.prototype.peek = function() { return this.array[this.array.length - 1]; };
+
+PropertyStack.prototype.empty = function() { this.array = []; };
 
 PropertyStack.prototype.addDependency = function(property) {
   if (this.array.length === 0) return;
@@ -614,41 +617,10 @@ process.chdir = function (dir) {
 };
 
 },{}],5:[function(require,module,exports){
-var util          = require('util');
-var EventEmitter  = require('events').EventEmitter;
-var PropertyStack = require('./property_stack');
-
-function Property(value) {
-  this.value = value;
-}
-
-util.inherits(Property, EventEmitter);
-
-Property.prototype.get = function() {
-  PropertyStack.addDependency(this);
-  return this.value;
-};
-
-Property.prototype.set = function(value) {
-  var oldValue = this.value;
-
-  this.value = value;
-  this.emit('change', value, oldValue);
-
-  return value;
-};
-
-module.exports = Property;
-
-},{"util":2,"events":3,"./property_stack":1}],6:[function(require,module,exports){
-window.PropertyStack    = require('./src/property_stack');
-window.Property         = require('./src/property');
-window.ComputedProperty = require('./src/computed_property');
-
-},{"./src/property_stack":1,"./src/property":5,"./src/computed_property":7}],7:[function(require,module,exports){
 var _             = require('underscore');
 var util          = require('util');
 var EventEmitter  = require('events').EventEmitter;
+var PropertyStack = require('./property_stack');
 
 function ComputedProperty(options) {
   if (_.isFunction(options)) options = {get: options};
@@ -692,8 +664,8 @@ ComputedProperty.prototype.clearDependencies = function() {
 
 module.exports = ComputedProperty;
 
-},{"util":2,"events":3,"underscore":8}],8:[function(require,module,exports){
-//     Underscore.js 1.4.4
+},{"util":2,"events":3,"./property_stack":1,"underscore":6}],6:[function(require,module,exports){
+(function(){//     Underscore.js 1.4.4
 //     http://underscorejs.org
 //     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud Inc.
 //     Underscore may be freely distributed under the MIT license.
@@ -1920,5 +1892,123 @@ module.exports = ComputedProperty;
 
 }).call(this);
 
-},{}]},{},[6])
+})()
+},{}],7:[function(require,module,exports){
+var util          = require('util');
+var EventEmitter  = require('events').EventEmitter;
+var PropertyStack = require('./property_stack');
+
+function Property(value) {
+  this.value = value;
+}
+
+util.inherits(Property, EventEmitter);
+
+Property.prototype.get = function() {
+  PropertyStack.addDependency(this);
+  return this.value;
+};
+
+Property.prototype.set = function(value) {
+  var oldValue = this.value;
+
+  this.value = value;
+  this.emit('change', value, oldValue);
+
+  return value;
+};
+
+module.exports = Property;
+
+},{"util":2,"events":3,"./property_stack":1}],8:[function(require,module,exports){
+var Property = require('./property');
+
+function Keypath(name, property) {
+  this.name = name;
+  this.property = property;
+
+  Keypath.map[name] = property;
+}
+
+Keypath.map = {};
+
+Keypath.lookup = function(name) {
+  if (!Keypath.map[name]) {
+    new Keypath(name, new Property());
+  }
+
+  return Keypath.map[name];
+};
+
+module.exports = Keypath;
+
+},{"./property":7}],9:[function(require,module,exports){
+function Binding(node, property) {
+  this.node = node;
+  this.property = property;
+}
+
+Binding.prototype.bind = function() {
+  var self = this;
+
+  this.property.on('change', function(value) {
+    self.node.value = value;
+  });
+};
+
+module.exports = Binding;
+
+},{}],10:[function(require,module,exports){
+var Cola = {};
+
+Cola.PropertyStack    = require('./src/property_stack');
+Cola.Property         = require('./src/property');
+Cola.ComputedProperty = require('./src/computed_property');
+
+Cola.Keypath          = require('./src/keypath');
+Cola.Binding          = require('./src/binding');
+Cola.Parser           = require('./src/parser');
+
+module.exports = Cola;
+
+},{"./src/property_stack":1,"./src/computed_property":5,"./src/property":7,"./src/keypath":8,"./src/binding":9,"./src/parser":11}],11:[function(require,module,exports){
+var Binding = require('./binding');
+var Keypath = require('./keypath');
+
+function Parser(root) {
+  this.root = root;
+}
+
+Parser.prototype.parse = function() {
+  var node = this.root;
+
+  do {
+    var bindName = node.getAttribute('data-bind');
+
+    if (!bindName) continue;
+
+    var binding = new Binding(node, Keypath.lookup(bindName));
+    binding.bind();
+  } while (node = this.nextNode(node));
+};
+
+Parser.prototype.nextNode = function(node) {
+  var next;
+  var parent = node.parentElement;
+  
+  if (next = node.firstElementChild) return next;
+  if (next = node.nextElementSibling) return next;
+
+  while (parent) {
+    if (next = parent.nextElementSibling) return next;
+    parent = parent.parentElement;
+  }
+
+  return;
+};
+
+module.exports = Parser;
+
+},{"./binding":9,"./keypath":8}]},{},[10])(10)
+});
 ;
