@@ -3,13 +3,10 @@ var util          = require('util');
 var EventEmitter  = require('events').EventEmitter;
 var PropertyStack = require('./property_stack');
 
-function ComputedProperty(options) {
-  if (_.isFunction(options)) options = {get: options};
-
+function ComputedProperty(getter) {
   this.dependencies = [];
-
-  this.value = options.defaultValue;
-  this.getter = options.get;
+  this.getter = getter;
+  this.get();
 }
 
 util.inherits(ComputedProperty, EventEmitter);
@@ -27,7 +24,13 @@ ComputedProperty.prototype.get = function() {
   PropertyStack.addDependency(this);
   PropertyStack.push(this);
 
-  this.value = this.getter();
+  var oldValue = this.value;
+  var newValue = this.getter();
+
+  if (newValue != oldValue) {
+    this.value = newValue;
+    this.emit('change', newValue, oldValue);
+  }
 
   PropertyStack.pop();
   return this.value;

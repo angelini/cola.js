@@ -649,13 +649,10 @@ var util          = require('util');
 var EventEmitter  = require('events').EventEmitter;
 var PropertyStack = require('./property_stack');
 
-function ComputedProperty(options) {
-  if (_.isFunction(options)) options = {get: options};
-
+function ComputedProperty(getter) {
   this.dependencies = [];
-
-  this.value = options.defaultValue;
-  this.getter = options.get;
+  this.getter = getter;
+  this.get();
 }
 
 util.inherits(ComputedProperty, EventEmitter);
@@ -673,7 +670,13 @@ ComputedProperty.prototype.get = function() {
   PropertyStack.addDependency(this);
   PropertyStack.push(this);
 
-  this.value = this.getter();
+  var oldValue = this.value;
+  var newValue = this.getter();
+
+  if (newValue != oldValue) {
+    this.value = newValue;
+    this.emit('change', newValue, oldValue);
+  }
 
   PropertyStack.pop();
   return this.value;
@@ -1921,35 +1924,87 @@ module.exports = ComputedProperty;
 
 })()
 },{}],8:[function(require,module,exports){
-var _    = require('underscore');
-var ever = require('ever');
+var Property = require('./property');
 
-function Binding(node, property) {
-  this.node = node;
+function Keypath(name, property) {
+  this.name = name;
   this.property = property;
+
+  Keypath.map[name] = property;
 }
 
-Binding.prototype.bind = function() {
-  var self = this;
+Keypath.map = {};
 
-  this.property.on('change', function(value) {
-    self.node.value = value;
-  });
-
-  if (this.isNodeEditable(this.node)) {
-    ever(this.node).on('change', function() {
-      self.property.set(self.node.value);
-    });
+Keypath.lookup = function(name) {
+  if (!Keypath.map[name]) {
+    new Keypath(name, new Property());
   }
+
+  return Keypath.map[name];
 };
 
-Binding.prototype.isNodeEditable = function(node) {
-  return ['INPUT', 'TEXTAREA', 'SELECT'].indexOf(node.nodeName.toUpperCase()) != -1;
+Keypath.empty = function() {
+  Keypath.map = {};
 };
 
-module.exports = Binding;
+module.exports = Keypath;
 
-},{"underscore":7,"ever":9}],10:[function(require,module,exports){
+},{"./property":5}],9:[function(require,module,exports){
+var Binding = require('./binding');
+var Keypath = require('./keypath');
+
+function Parser(root) {
+  this.root = root;
+}
+
+Parser.prototype.parse = function() {
+  var node = this.root;
+
+  do {
+    var bindName = node.getAttribute('data-bind');
+
+    if (!bindName) continue;
+
+    var binding = new Binding(node, Keypath.lookup(bindName));
+    binding.bind();
+  } while (node = this.nextNode(node));
+};
+
+Parser.prototype.nextNode = function(node) {
+  var next;
+  var parent = node.parentElement;
+  
+  if (next = node.firstElementChild) return next;
+  if (next = node.nextElementSibling) return next;
+
+  while (parent) {
+    if (next = parent.nextElementSibling) return next;
+    parent = parent.parentElement;
+  }
+
+  return;
+};
+
+module.exports = Parser;
+
+},{"./keypath":8,"./binding":10}],11:[function(require,module,exports){
+var Cola = {};
+
+Cola.PropertyStack    = require('./src/property_stack');
+Cola.Property         = require('./src/property');
+Cola.ComputedProperty = require('./src/computed_property');
+
+Cola.Keypath          = require('./src/keypath');
+Cola.Binding          = require('./src/binding');
+Cola.Parser           = require('./src/parser');
+
+window._              = require('underscore');
+window.ever           = require('ever');
+
+
+module.exports = Cola;
+
+},{"./src/property_stack":1,"./src/property":5,"./src/computed_property":6,"./src/keypath":8,"./src/binding":10,"./src/parser":9,"underscore":7,"ever":12}],13:[function(require,module,exports){
 module.exports=module.exports={
   "initEvent" : [
     "type",
@@ -1992,7 +2047,7 @@ module.exports=module.exports={
   ]
 }
 
-},{}],9:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 var EventEmitter = require('events').EventEmitter;
 
 module.exports = function (elem) {
@@ -2104,7 +2159,7 @@ Ever.typeOf = (function () {
     };
 })();;
 
-},{"events":3,"./init.json":10,"./types.json":11}],11:[function(require,module,exports){
+},{"events":3,"./init.json":13,"./types.json":14}],14:[function(require,module,exports){
 module.exports=module.exports={
   "MouseEvent" : [
     "click",
@@ -2149,87 +2204,43 @@ module.exports=module.exports={
   ]
 }
 
-},{}],12:[function(require,module,exports){
-var Binding = require('./binding');
-var Keypath = require('./keypath');
+},{}],10:[function(require,module,exports){
+var _                = require('underscore');
+var ever             = require('ever');
+var ComputedProperty = require('./computed_property');
 
-function Parser(root) {
-  this.root = root;
-}
-
-Parser.prototype.parse = function() {
-  var node = this.root;
-
-  do {
-    var bindName = node.getAttribute('data-bind');
-
-    if (!bindName) continue;
-
-    var binding = new Binding(node, Keypath.lookup(bindName));
-    binding.bind();
-  } while (node = this.nextNode(node));
-};
-
-Parser.prototype.nextNode = function(node) {
-  var next;
-  var parent = node.parentElement;
-  
-  if (next = node.firstElementChild) return next;
-  if (next = node.nextElementSibling) return next;
-
-  while (parent) {
-    if (next = parent.nextElementSibling) return next;
-    parent = parent.parentElement;
-  }
-
-  return;
-};
-
-module.exports = Parser;
-
-},{"./keypath":13,"./binding":8}],14:[function(require,module,exports){
-var Cola = {};
-
-Cola.PropertyStack    = require('./src/property_stack');
-Cola.Property         = require('./src/property');
-Cola.ComputedProperty = require('./src/computed_property');
-
-Cola.Keypath          = require('./src/keypath');
-Cola.Binding          = require('./src/binding');
-Cola.Parser           = require('./src/parser');
-
-window._              = require('underscore');
-window.ever           = require('ever');
-
-
-module.exports = Cola;
-
-},{"./src/property_stack":1,"./src/property":5,"./src/computed_property":6,"./src/keypath":13,"./src/binding":8,"./src/parser":12,"underscore":7,"ever":9}],13:[function(require,module,exports){
-var Property = require('./property');
-
-function Keypath(name, property) {
-  this.name = name;
+function Binding(node, property) {
+  this.node = node;
   this.property = property;
-
-  Keypath.map[name] = property;
 }
 
-Keypath.map = {};
+Binding.prototype.bind = function() {
+  var self = this;
 
-Keypath.lookup = function(name) {
-  if (!Keypath.map[name]) {
-    new Keypath(name, new Property());
+  this.property.on('change', this.setNode.bind(this));
+
+  if (this.isNodeEditable(this.node) && !(this.property instanceof ComputedProperty)) {
+    ever(this.node).on('change', this.setProperty.bind(this));
   }
 
-  return Keypath.map[name];
+  this.setNode();
 };
 
-Keypath.empty = function() {
-  Keypath.map = {};
+Binding.prototype.isNodeEditable = function(node) {
+  return ['INPUT', 'TEXTAREA', 'SELECT'].indexOf(node.nodeName.toUpperCase()) != -1;
 };
 
-module.exports = Keypath;
+Binding.prototype.setNode = function() {
+  var value = this.property.get();
+  if (value) this.node.value = value;
+};
 
-},{"./property":5}]},{},[14])(14)
+Binding.prototype.setProperty = function() {
+  this.property.set(this.node.value);
+};
+
+module.exports = Binding;
+
+},{"./computed_property":6,"underscore":7,"ever":12}]},{},[11])(11)
 });
 ;

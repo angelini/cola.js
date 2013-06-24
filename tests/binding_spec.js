@@ -54,36 +54,61 @@ describe('Parser', function() {
 });
 
 describe('Binding', function() {
-  var div;
+  var input;
   var prop;
 
   beforeEach(function() {
     Cola.Keypath.empty();
 
-    div = document.createElement('input');
-    div.setAttribute('data-bind', 'keypath');
+    input = document.createElement('input');
+    input.setAttribute('data-bind', 'keypath');
     prop = Cola.Keypath.lookup('keypath');
   });
 
   it('should bind the node to JS property changes', function() {
-    var parser = new Cola.Parser(div);
+    var parser = new Cola.Parser(input);
     parser.parse();
 
-    expect(div.value).toBe('');
+    expect(input.value).toBe('');
     prop.set('test');
-    expect(div.value).toBe('test');
+    expect(input.value).toBe('test');
   });
 
   it('should bind the JS properties to node changes', function() {
-    var parser = new Cola.Parser(div);
+    var parser = new Cola.Parser(input);
     parser.parse();
 
     expect(prop.get()).toBeUndefined();
 
-    div.value = 10;
-    ever(div).emit('change');
+    input.value = 10;
+    ever(input).emit('change');
 
     expect(prop.get()).toBe('10');
+  });
+
+  it('should bind the node to computer properties', function() {
+    var dep = new Cola.Property(['hello', 'world']);
+    var get = function() { return dep.get().join(' '); };
+    var computedKey = new Cola.Keypath('keypath', new Cola.ComputedProperty(get));
+
+    var parser = new Cola.Parser(input);
+    parser.parse();
+
+    expect(input.value).toBe('hello world');
+  });
+
+  it('should not try and set computer properties', function() {
+    var dep = new Cola.Property(['hello', 'world']);
+    var get = function() { return dep.get().join(' '); };
+    var computedKey = new Cola.Keypath('keypath', new Cola.ComputedProperty(get));
+
+    var parser = new Cola.Parser(input);
+    parser.parse();
+
+    input.value = 10;
+    ever(input).emit('change');
+
+    expect(prop.get()).toBeUndefined();
   });
 
 });
