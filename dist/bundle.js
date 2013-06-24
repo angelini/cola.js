@@ -617,6 +617,33 @@ process.chdir = function (dir) {
 };
 
 },{}],5:[function(require,module,exports){
+var util          = require('util');
+var EventEmitter  = require('events').EventEmitter;
+var PropertyStack = require('./property_stack');
+
+function Property(value) {
+  this.value = value;
+}
+
+util.inherits(Property, EventEmitter);
+
+Property.prototype.get = function() {
+  PropertyStack.addDependency(this);
+  return this.value;
+};
+
+Property.prototype.set = function(value) {
+  var oldValue = this.value;
+
+  this.value = value;
+  this.emit('change', value, oldValue);
+
+  return value;
+};
+
+module.exports = Property;
+
+},{"util":2,"events":3,"./property_stack":1}],6:[function(require,module,exports){
 var _             = require('underscore');
 var util          = require('util');
 var EventEmitter  = require('events').EventEmitter;
@@ -664,7 +691,7 @@ ComputedProperty.prototype.clearDependencies = function() {
 
 module.exports = ComputedProperty;
 
-},{"util":2,"events":3,"./property_stack":1,"underscore":6}],6:[function(require,module,exports){
+},{"util":2,"events":3,"./property_stack":1,"underscore":7}],7:[function(require,module,exports){
 (function(){//     Underscore.js 1.4.4
 //     http://underscorejs.org
 //     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -1893,56 +1920,10 @@ module.exports = ComputedProperty;
 }).call(this);
 
 })()
-},{}],7:[function(require,module,exports){
-var util          = require('util');
-var EventEmitter  = require('events').EventEmitter;
-var PropertyStack = require('./property_stack');
+},{}],8:[function(require,module,exports){
+var _    = require('underscore');
+var ever = require('ever');
 
-function Property(value) {
-  this.value = value;
-}
-
-util.inherits(Property, EventEmitter);
-
-Property.prototype.get = function() {
-  PropertyStack.addDependency(this);
-  return this.value;
-};
-
-Property.prototype.set = function(value) {
-  var oldValue = this.value;
-
-  this.value = value;
-  this.emit('change', value, oldValue);
-
-  return value;
-};
-
-module.exports = Property;
-
-},{"util":2,"events":3,"./property_stack":1}],8:[function(require,module,exports){
-var Property = require('./property');
-
-function Keypath(name, property) {
-  this.name = name;
-  this.property = property;
-
-  Keypath.map[name] = property;
-}
-
-Keypath.map = {};
-
-Keypath.lookup = function(name) {
-  if (!Keypath.map[name]) {
-    new Keypath(name, new Property());
-  }
-
-  return Keypath.map[name];
-};
-
-module.exports = Keypath;
-
-},{"./property":7}],9:[function(require,module,exports){
 function Binding(node, property) {
   this.node = node;
   this.property = property;
@@ -1954,24 +1935,221 @@ Binding.prototype.bind = function() {
   this.property.on('change', function(value) {
     self.node.value = value;
   });
+
+  if (this.isNodeEditable(this.node)) {
+    ever(this.node).on('change', function() {
+      self.property.set(self.node.value);
+    });
+  }
+};
+
+Binding.prototype.isNodeEditable = function(node) {
+  return ['INPUT', 'TEXTAREA', 'SELECT'].indexOf(node.nodeName.toUpperCase()) != -1;
 };
 
 module.exports = Binding;
 
-},{}],10:[function(require,module,exports){
-var Cola = {};
+},{"underscore":7,"ever":9}],10:[function(require,module,exports){
+module.exports=module.exports={
+  "initEvent" : [
+    "type",
+    "canBubble", 
+    "cancelable"
+  ],
+  "initUIEvent" : [
+    "type",
+    "canBubble", 
+    "cancelable", 
+    "view", 
+    "detail"
+  ],
+  "initMouseEvent" : [
+    "type",
+    "canBubble", 
+    "cancelable", 
+    "view", 
+    "detail", 
+    "screenX", 
+    "screenY", 
+    "clientX", 
+    "clientY", 
+    "ctrlKey", 
+    "altKey", 
+    "shiftKey", 
+    "metaKey", 
+    "button",
+    "relatedTarget"
+  ],
+  "initMutationEvent" : [
+    "type",
+    "canBubble", 
+    "cancelable", 
+    "relatedNode", 
+    "prevValue", 
+    "newValue", 
+    "attrName", 
+    "attrChange"
+  ]
+}
 
-Cola.PropertyStack    = require('./src/property_stack');
-Cola.Property         = require('./src/property');
-Cola.ComputedProperty = require('./src/computed_property');
+},{}],9:[function(require,module,exports){
+var EventEmitter = require('events').EventEmitter;
 
-Cola.Keypath          = require('./src/keypath');
-Cola.Binding          = require('./src/binding');
-Cola.Parser           = require('./src/parser');
+module.exports = function (elem) {
+    return new Ever(elem);
+};
 
-module.exports = Cola;
+function Ever (elem) {
+    this.element = elem;
+}
 
-},{"./src/property_stack":1,"./src/computed_property":5,"./src/property":7,"./src/keypath":8,"./src/binding":9,"./src/parser":11}],11:[function(require,module,exports){
+Ever.prototype = new EventEmitter;
+
+Ever.prototype.on = function (name, cb, useCapture) {
+    if (!this._events) this._events = {};
+    if (!this._events[name]) this._events[name] = [];
+    this._events[name].push(cb);
+    this.element.addEventListener(name, cb, useCapture || false);
+
+    return this;
+};
+Ever.prototype.addListener = Ever.prototype.on;
+
+Ever.prototype.removeListener = function (type, listener, useCapture) {
+    if (!this._events) this._events = {};
+    this.element.removeEventListener(type, listener, useCapture || false);
+    
+    var xs = this.listeners(type);
+    var ix = xs.indexOf(listener);
+    if (ix >= 0) xs.splice(ix, 1);
+
+    return this;
+};
+
+Ever.prototype.removeAllListeners = function (type) {
+    var self = this;
+    function removeAll (t) {
+        var xs = self.listeners(t);
+        for (var i = 0; i < xs.length; i++) {
+            self.removeListener(t, xs[i]);
+        }
+    }
+    
+    if (type) {
+        removeAll(type)
+    }
+    else if (self._events) {
+        for (var key in self._events) {
+            if (key) removeAll(key);
+        }
+    }
+    return EventEmitter.prototype.removeAllListeners.apply(self, arguments);
+}
+
+var initSignatures = require('./init.json');
+
+Ever.prototype.emit = function (name, ev) {
+    if (typeof name === 'object') {
+        ev = name;
+        name = ev.type;
+    }
+    
+    if (!isEvent(ev)) {
+        var type = Ever.typeOf(name);
+        
+        var opts = ev || {};
+        if (opts.type === undefined) opts.type = name;
+        
+        ev = document.createEvent(type + 's');
+        var init = typeof ev['init' + type] === 'function'
+            ? 'init' + type : 'initEvent'
+        ;
+        
+        var sig = initSignatures[init];
+        var used = {};
+        var args = [];
+        
+        for (var i = 0; i < sig.length; i++) {
+            var key = sig[i];
+            args.push(opts[key]);
+            used[key] = true;
+        }
+        ev[init].apply(ev, args);
+        
+        // attach remaining unused options to the object
+        for (var key in opts) {
+            if (!used[key]) ev[key] = opts[key];
+        }
+    }
+    return this.element.dispatchEvent(ev);
+};
+
+function isEvent (ev) {
+    var s = Object.prototype.toString.call(ev);
+    return /\[object \S+Event\]/.test(s);
+}
+
+Ever.types = require('./types.json');
+Ever.typeOf = (function () {
+    var types = {};
+    for (var key in Ever.types) {
+        var ts = Ever.types[key];
+        for (var i = 0; i < ts.length; i++) {
+            types[ts[i]] = key;
+        }
+    }
+    
+    return function (name) {
+        return types[name] || 'Event';
+    };
+})();;
+
+},{"events":3,"./init.json":10,"./types.json":11}],11:[function(require,module,exports){
+module.exports=module.exports={
+  "MouseEvent" : [
+    "click",
+    "mousedown",
+    "mouseup",
+    "mouseover",
+    "mousemove",
+    "mouseout"
+  ],
+  "KeyBoardEvent" : [
+    "keydown",
+    "keyup",
+    "keypress"
+  ],
+  "MutationEvent" : [
+    "DOMSubtreeModified",
+    "DOMNodeInserted",
+    "DOMNodeRemoved",
+    "DOMNodeRemovedFromDocument",
+    "DOMNodeInsertedIntoDocument",
+    "DOMAttrModified",
+    "DOMCharacterDataModified"
+  ],
+  "HTMLEvent" : [
+    "load",
+    "unload",
+    "abort",
+    "error",
+    "select",
+    "change",
+    "submit",
+    "reset",
+    "focus",
+    "blur",
+    "resize",
+    "scroll"
+  ],
+  "UIEvent" : [
+    "DOMFocusIn",
+    "DOMFocusOut",
+    "DOMActivate"
+  ]
+}
+
+},{}],12:[function(require,module,exports){
 var Binding = require('./binding');
 var Keypath = require('./keypath');
 
@@ -2009,6 +2187,49 @@ Parser.prototype.nextNode = function(node) {
 
 module.exports = Parser;
 
-},{"./binding":9,"./keypath":8}]},{},[10])(10)
+},{"./keypath":13,"./binding":8}],14:[function(require,module,exports){
+var Cola = {};
+
+Cola.PropertyStack    = require('./src/property_stack');
+Cola.Property         = require('./src/property');
+Cola.ComputedProperty = require('./src/computed_property');
+
+Cola.Keypath          = require('./src/keypath');
+Cola.Binding          = require('./src/binding');
+Cola.Parser           = require('./src/parser');
+
+window._              = require('underscore');
+window.ever           = require('ever');
+
+
+module.exports = Cola;
+
+},{"./src/property_stack":1,"./src/property":5,"./src/computed_property":6,"./src/keypath":13,"./src/binding":8,"./src/parser":12,"underscore":7,"ever":9}],13:[function(require,module,exports){
+var Property = require('./property');
+
+function Keypath(name, property) {
+  this.name = name;
+  this.property = property;
+
+  Keypath.map[name] = property;
+}
+
+Keypath.map = {};
+
+Keypath.lookup = function(name) {
+  if (!Keypath.map[name]) {
+    new Keypath(name, new Property());
+  }
+
+  return Keypath.map[name];
+};
+
+Keypath.empty = function() {
+  Keypath.map = {};
+};
+
+module.exports = Keypath;
+
+},{"./property":5}]},{},[14])(14)
 });
 ;

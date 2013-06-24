@@ -58,7 +58,9 @@ describe('Binding', function() {
   var prop;
 
   beforeEach(function() {
-    div = document.createElement('div');
+    Cola.Keypath.empty();
+
+    div = document.createElement('input');
     div.setAttribute('data-bind', 'keypath');
     prop = Cola.Keypath.lookup('keypath');
   });
@@ -67,9 +69,21 @@ describe('Binding', function() {
     var parser = new Cola.Parser(div);
     parser.parse();
 
-    expect(div.value).toBeUndefined();
+    expect(div.value).toBe('');
     prop.set('test');
     expect(div.value).toBe('test');
+  });
+
+  it('should bind the JS properties to node changes', function() {
+    var parser = new Cola.Parser(div);
+    parser.parse();
+
+    expect(prop.get()).toBeUndefined();
+
+    div.value = 10;
+    ever(div).emit('change');
+
+    expect(prop.get()).toBe('10');
   });
 
 });

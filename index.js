@@ -8,4 +8,8 @@ Cola.Keypath          = require('./src/keypath');
 Cola.Binding          = require('./src/binding');
 Cola.Parser           = require('./src/parser');
 
+window._              = require('underscore');
+window.ever           = require('ever');
+
+
 module.exports = Cola;

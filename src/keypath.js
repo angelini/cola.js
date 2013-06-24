@@ -17,4 +17,8 @@ Keypath.lookup = function(name) {
   return Keypath.map[name];
 };
 
+Keypath.empty = function() {
+  Keypath.map = {};
+};
+
 module.exports = Keypath;
