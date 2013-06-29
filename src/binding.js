@@ -1,35 +1,40 @@
-var _                = require('underscore');
-var ever             = require('ever');
-var ComputedProperty = require('./computed_property');
+define([
+  'underscore',
+  'src/ComputedProperty'
+],
 
-function Binding(node, property) {
-  this.node = node;
-  this.property = property;
-}
+function(_, ComputedProperty) {
 
-Binding.prototype.bind = function() {
-  var self = this;
-
-  this.property.on('change', this.setNode.bind(this));
-
-  if (this.isNodeEditable(this.node) && !(this.property instanceof ComputedProperty)) {
-    ever(this.node).on('change', this.setProperty.bind(this));
+  function Binding(node, property) {
+    this.node = node;
+    this.property = property;
   }
 
-  this.setNode();
-};
+  Binding.prototype.bind = function() {
+    var self = this;
 
-Binding.prototype.isNodeEditable = function(node) {
-  return ['INPUT', 'TEXTAREA', 'SELECT'].indexOf(node.nodeName.toUpperCase()) != -1;
-};
+    this.property.on('change', this.setNode.bind(this));
 
-Binding.prototype.setNode = function() {
-  var value = this.property.get();
-  if (value) this.node.value = value;
-};
+    if (this.isNodeEditable(this.node) && !(this.property instanceof ComputedProperty)) {
+      this.node.addEventListener('change', this.setProperty.bind(this));
+    }
 
-Binding.prototype.setProperty = function() {
-  this.property.set(this.node.value);
-};
+    this.setNode();
+  };
 
-module.exports = Binding;
+  Binding.prototype.isNodeEditable = function(node) {
+    return ['INPUT', 'TEXTAREA', 'SELECT'].indexOf(node.nodeName.toUpperCase()) != -1;
+  };
+
+  Binding.prototype.setNode = function() {
+    var value = this.property.get();
+    if (value) this.node.value = value;
+  };
+
+  Binding.prototype.setProperty = function() {
+    this.property.set(this.node.value);
+  };
+
+  return Binding;
+
+});

@@ -1,24 +1,30 @@
-var Property = require('./property');
+define([
+  'src/Property'    
+],
 
-function Keypath(name, property) {
-  this.name = name;
-  this.property = property;
+function(Property) {
 
-  Keypath.map[name] = property;
-}
+  function Keypath(name, property) {
+    this.name = name;
+    this.property = property;
 
-Keypath.map = {};
-
-Keypath.lookup = function(name) {
-  if (!Keypath.map[name]) {
-    new Keypath(name, new Property());
+    Keypath.map[name] = property;
   }
 
-  return Keypath.map[name];
-};
-
-Keypath.empty = function() {
   Keypath.map = {};
-};
 
-module.exports = Keypath;
+  Keypath.lookup = function(name) {
+    if (!Keypath.map[name]) {
+      new Keypath(name, new Property());
+    }
+
+    return Keypath.map[name];
+  };
+
+  Keypath.empty = function() {
+    Keypath.map = {};
+  };
+
+  return Keypath;
+
+});

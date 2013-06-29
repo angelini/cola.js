@@ -1,25 +1,31 @@
-var util          = require('util');
-var EventEmitter  = require('events').EventEmitter;
-var PropertyStack = require('./property_stack');
+define([
+  'underscore',
+  'eventemitter2',
+  'src/PropertyStack'
+],
 
-function Property(value) {
-  this.value = value;
-}
+function(_, EventEmitter, PropertyStack) {
 
-util.inherits(Property, EventEmitter);
+  function Property(value) {
+    this.value = value;
+  }
 
-Property.prototype.get = function() {
-  PropertyStack.addDependency(this);
-  return this.value;
-};
+  _.extend(Property.prototype, EventEmitter.prototype);
 
-Property.prototype.set = function(value) {
-  var oldValue = this.value;
+  Property.prototype.get = function() {
+    PropertyStack.addDependency(this);
+    return this.value;
+  };
 
-  this.value = value;
-  this.emit('change', value, oldValue);
+  Property.prototype.set = function(value) {
+    var oldValue = this.value;
 
-  return value;
-};
+    this.value = value;
+    this.emit('change', value, oldValue);
 
-module.exports = Property;
+    return value;
+  };
+
+  return Property;
+
+});

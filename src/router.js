@@ -1,45 +1,51 @@
-var mapleTree = require('mapleTree');
+define([
+  'mapleTree'
+],
+    
+function(RouteTree) {
 
-function Router() {
-  var self = this;
-  this.tree = new mapleTree.RouteTree();
-}
-
-Router.prototype.addRoute = function(definition, fn) {
-  this.tree.define(definition, fn);
-};
-
-Router.prototype.route = function(fullPath) {
-  var pathSplit = fullPath.split('?');
-  var path = pathSplit[0];
-  var query = {};
-  var match = this.tree.match(path);
-
-  if (!match || !match.perfect) {
-    return;
+  function Router() {
+    var self = this;
+    this.tree = new RouteTree();
   }
 
-  if (pathSplit.length == 2) {
-    query = this.buildQueryObject(pathSplit[1]);
-  }
+  Router.prototype.addRoute = function(definition, fn) {
+    this.tree.define(definition, fn);
+  };
 
-  match.fn(fullPath, match.params, query);
-};
+  Router.prototype.route = function(fullPath) {
+    var pathSplit = fullPath.split('?');
+    var path = pathSplit[0];
+    var query = {};
+    var match = this.tree.match(path);
 
-Router.prototype.empty = function() {
-  this.tree = new mapleTree.RouteTree();
-};
+    if (!match || !match.perfect) {
+      return;
+    }
 
-Router.prototype.buildQueryObject = function(queryString) {
-  var query = {};
-  var querySplit = queryString.split('&');
+    if (pathSplit.length == 2) {
+      query = this.buildQueryObject(pathSplit[1]);
+    }
 
-  _.each(querySplit, function(param) {
-    var paramSplit = param.split('=');
-    query[paramSplit[0]] = paramSplit.length == 2 ? paramSplit[1] : '';
-  });
+    match.fn(fullPath, match.params, query);
+  };
 
-  return query;
-};
+  Router.prototype.empty = function() {
+    this.tree = new RouteTree();
+  };
 
-module.exports = new Router();
+  Router.prototype.buildQueryObject = function(queryString) {
+    var query = {};
+    var querySplit = queryString.split('&');
+
+    _.each(querySplit, function(param) {
+      var paramSplit = param.split('=');
+      query[paramSplit[0]] = paramSplit.length == 2 ? paramSplit[1] : '';
+    });
+
+    return query;
+  };
+
+  return new Router();
+
+});

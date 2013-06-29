@@ -10,8 +10,14 @@ basePath = '';
 files = [
   JASMINE,
   JASMINE_ADAPTER,
-  'dist/bundle.js',
-  'tests/**/*.js'
+  REQUIRE,
+  REQUIRE_ADAPTER,
+  
+  {pattern: 'vendor/**/*.js', included: false},
+  {pattern: 'src/**/*.js', included: false},
+  {pattern: 'tests/**/*Spec.js', included: false},
+
+  'tests/test-main.js'
 ];
 
 
