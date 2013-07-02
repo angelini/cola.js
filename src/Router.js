@@ -1,7 +1,7 @@
 define([
-  'mapleTree'
+  'src/RouteTree'
 ],
-    
+
 function(RouteTree) {
 
   function Router() {
@@ -19,7 +19,7 @@ function(RouteTree) {
     var query = {};
     var match = this.tree.match(path);
 
-    if (!match || !match.perfect) {
+    if (!match) {
       return;
     }
 
@@ -27,7 +27,7 @@ function(RouteTree) {
       query = this.buildQueryObject(pathSplit[1]);
     }
 
-    match.fn(fullPath, match.params, query);
+    match.fn(fullPath, match.args, query);
   };
 
   Router.prototype.empty = function() {
