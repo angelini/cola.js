@@ -1,27 +1,9 @@
 define([
-  'underscore'
+  'underscore',
+  'src/RouteNode'
 ],
 
-function(_) {
-
-  function RouteNode(name) {
-    this.name = name;
-    this.children = [];
-  }
-
-  RouteNode.prototype.hasChild = function(name, options) {
-    options = options || {};
-
-    var node = _.find(this.children, function(childNode) {
-      return childNode.name == name;
-    });
-
-    if (!node && options.includeArguments) {
-      node = this.hasChild('__argument__');
-    }
-
-    return node;
-  };
+function(_, RouteNode) {
 
   function RouteTree() {
     this.root = new RouteNode('');
@@ -46,7 +28,7 @@ function(_) {
         routePiece = '__argument__';
       }
 
-      var childNode = currentNode.hasChild(routePiece);
+      var childNode = currentNode.findChild(routePiece);
 
       if (!childNode) {
         childNode = new RouteNode(routePiece);
@@ -73,12 +55,14 @@ function(_) {
       if (index === 0) return;
       if (!currentNode) return;
 
-      currentNode = currentNode.hasChild(routePiece, {includeArguments: true});
+      currentNode = currentNode.findChild(routePiece, {includeArguments: true});
 
       if (currentNode && currentNode.name == '__argument__') {
         argumentList.push(routePiece);
       }
     });
+
+    if (!currentNode) return;
 
     var args = {};
 
