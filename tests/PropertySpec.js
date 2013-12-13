@@ -85,7 +85,7 @@ function(PropertyStack, Property, ComputedProperty) {
       var dep = new Property(3);
       var get = function() { return dep.get() + 2; };
       var prop = new ComputedProperty(get);
-     
+
       expect(prop.get()).toBe(5);
 
       dep.set(5);
@@ -96,7 +96,7 @@ function(PropertyStack, Property, ComputedProperty) {
       var dep = new Property(3);
       var get = function() { return dep.get() + 2; };
       var prop = new ComputedProperty(get);
-    
+
       prop.get();
       prop.get();
 
