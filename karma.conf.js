@@ -12,7 +12,7 @@ files = [
   JASMINE_ADAPTER,
   REQUIRE,
   REQUIRE_ADAPTER,
-  
+
   {pattern: 'vendor/**/*.js', included: false},
   {pattern: 'src/**/*.js', included: false},
   {pattern: 'tests/**/*Spec.js', included: false},
@@ -23,13 +23,13 @@ files = [
 
 // list of files to exclude
 exclude = [
-  
+
 ];
 
 
 // test results reporter to use
 // possible values: 'dots', 'progress', 'junit'
-reporters = ['progress', 'growl'];
+reporters = ['progress'];
 
 
 // web server port
