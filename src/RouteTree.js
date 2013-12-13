@@ -1,6 +1,6 @@
 define([
   'underscore',
-  'src/RouteNode'
+  'RouteNode'
 ],
 
 function(_, RouteNode) {

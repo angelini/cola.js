@@ -1,7 +1,7 @@
 define([
-  'src/PropertyStack',
-  'src/Property',
-  'src/ComputedProperty'
+  'PropertyStack',
+  'Property',
+  'ComputedProperty'
 ],
 
 function(PropertyStack, Property, ComputedProperty) {

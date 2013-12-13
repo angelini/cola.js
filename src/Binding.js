@@ -1,6 +1,6 @@
 define([
   'underscore',
-  'src/ComputedProperty'
+  'ComputedProperty'
 ],
 
 function(_, ComputedProperty) {

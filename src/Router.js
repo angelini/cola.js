@@ -1,5 +1,5 @@
 define([
-  'src/RouteTree'
+  'RouteTree'
 ],
 
 function(RouteTree) {

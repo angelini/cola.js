@@ -1,5 +1,5 @@
 define([
-  'src/Property'    
+  'Property'
 ],
 
 function(Property) {

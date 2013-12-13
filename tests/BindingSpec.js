@@ -1,9 +1,9 @@
 define([
-  'src/Property',
-  'src/ComputedProperty',
-  'src/Keypath',
-  'src/Parser',
-  'src/Binding'
+  'Property',
+  'ComputedProperty',
+  'Keypath',
+  'Parser',
+  'Binding'
 ],
 
 function(Property, ComputedProperty, Keypath, Parser, Binding) {
@@ -51,7 +51,7 @@ function(Property, ComputedProperty, Keypath, Parser, Binding) {
 
     it('should detect data-bind attributes', function() {
       var parser = new Parser(div);
-      
+
       div.firstChild.setAttribute('data-bind', 'keypath');
       div.lastChild.firstElementChild.setAttribute('data-bind', 'other.keypath');
 

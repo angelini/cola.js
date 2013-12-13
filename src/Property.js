@@ -1,7 +1,7 @@
 define([
   'underscore',
   'eventemitter2',
-  'src/PropertyStack'
+  'PropertyStack'
 ],
 
 function(_, EventEmitter, PropertyStack) {

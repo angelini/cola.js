@@ -1,13 +1,13 @@
 define([
- 'src/PropertyStack',
- 'src/Property',
- 'src/ComputedProperty',
+ 'PropertyStack',
+ 'Property',
+ 'ComputedProperty',
 
- 'src/Keypath',
- 'src/Binding',
- 'src/Parser',
+ 'Keypath',
+ 'Binding',
+ 'Parser',
 
- 'src/Router'
+ 'Router'
 ],
 
 function(PropertyStack, Property, ComputedProperty, Keypath, Binding, Parser, Router) {

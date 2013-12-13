@@ -1,7 +1,7 @@
 define([
-  'src/RouteNode',
-  'src/RouteTree',
-  'src/Router'
+  'RouteNode',
+  'RouteTree',
+  'Router'
 ],
 
 function(RouteNode, RouteTree, Router) {

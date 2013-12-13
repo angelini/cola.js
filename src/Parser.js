@@ -1,6 +1,6 @@
 define([
-  'src/Binding',
-  'src/Keypath'
+  'Binding',
+  'Keypath'
 ],
 
 function(Binding, Keypath) {
@@ -25,7 +25,7 @@ function(Binding, Keypath) {
   Parser.prototype.nextNode = function(node) {
     var next;
     var parent = node.parentElement;
-    
+
     if (next = node.firstElementChild) return next;
     if (next = node.nextElementSibling) return next;
 

@@ -4,12 +4,11 @@ var tests = Object.keys(window.__karma__.files).filter(function (file) {
 
 require.config({
 
-  baseUrl: '/base',
+  baseUrl: '/base/src',
 
   paths: {
-    underscore: 'vendor/underscore',
-    eventemitter2: 'vendor/eventemitter2',
-    mapleTree: 'vendor/mapleTree'
+    underscore:    '../vendor/underscore',
+    eventemitter2: '../vendor/eventemitter2'
   },
 
   shim: {
@@ -19,10 +18,6 @@ require.config({
 
     eventemitter2: {
       exports: 'EventEmitter2'
-    },
-
-    mapleTree: {
-      exports: 'RouteTree'
     }
   },
 
