@@ -11,9 +11,9 @@ define([
 ],
 
 function(PropertyStack, Property, ComputedProperty, Keypath, Binding, Parser, Router) {
-  
+
   var Cola = {};
-  
+
   Cola.PropertyStack    = PropertyStack;
   Cola.Property         = Property;
   Cola.ComputedProperty = ComputedProperty;

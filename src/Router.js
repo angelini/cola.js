@@ -5,7 +5,6 @@ define([
 function(RouteTree) {
 
   function Router() {
-    var self = this;
     this.tree = new RouteTree();
   }
 
@@ -14,10 +13,10 @@ function(RouteTree) {
   };
 
   Router.prototype.route = function(fullPath) {
-    var pathSplit = fullPath.split('?');
-    var path = pathSplit[0];
-    var query = {};
-    var match = this.tree.match(path);
+    var pathSplit = fullPath.split('?'),
+        path = pathSplit[0],
+        query = {},
+        match = this.tree.match(path);
 
     if (!match) {
       return;
@@ -35,8 +34,8 @@ function(RouteTree) {
   };
 
   Router.prototype.buildQueryObject = function(queryString) {
-    var query = {};
-    var querySplit = queryString.split('&');
+    var query = {},
+        querySplit = queryString.split('&');
 
     _.each(querySplit, function(param) {
       var paramSplit = param.split('=');
@@ -46,6 +45,6 @@ function(RouteTree) {
     return query;
   };
 
-  return new Router();
+  return Router;
 
 });

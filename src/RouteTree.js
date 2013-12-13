@@ -16,9 +16,9 @@ function(_, RouteNode) {
   RouteTree.prototype.define = function(route, fn) {
     route = this.normalizeRoute(route);
 
-    var routePieces = route.split('/');
-    var currentNode = this.root;
-    var routeArgs = [];
+    var routePieces = route.split('/'),
+        currentNode = this.root,
+        routeArgs = [];
 
     _.each(routePieces, function(routePiece, index) {
       if (index === 0) return;
@@ -47,9 +47,9 @@ function(_, RouteNode) {
   RouteTree.prototype.match = function(route) {
     route = this.normalizeRoute(route);
 
-    var routePieces = route.split('/');
-    var currentNode = this.root;
-    var argumentList = [];
+    var routePieces = route.split('/'),
+        currentNode = this.root,
+        argumentList = [];
 
     _.each(routePieces, function(routePiece, index) {
       if (index === 0) return;

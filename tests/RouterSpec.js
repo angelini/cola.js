@@ -14,8 +14,8 @@ function(RouteNode, RouteTree, Router) {
     });
 
     it('should find the child node with the same name', function() {
-      var first = new RouteNode('first');
-      var second = new RouteNode('second');
+      var first  = new RouteNode('first'),
+          second = new RouteNode('second');
 
       root.children.push(first, second);
 
@@ -24,8 +24,8 @@ function(RouteNode, RouteTree, Router) {
     });
 
     it('should return the __argument__ child if the option is included', function() {
-      var first = new RouteNode('first');
-      var argument = new RouteNode('__argument__');
+      var first    = new RouteNode('first'),
+          argument = new RouteNode('__argument__');
 
       root.children.push(first, argument);
 
@@ -58,9 +58,9 @@ function(RouteNode, RouteTree, Router) {
       tree.define('/test/:foo/:bar', 2);
       tree.define('/:foo/bar', 3);
 
-      firstMatch = tree.match('/test/hello');
+      firstMatch  = tree.match('/test/hello');
       secondMatch = tree.match('/test/world/hello');
-      thirdMatch = tree.match('/bar/bar');
+      thirdMatch  = tree.match('/bar/bar');
 
       expect(firstMatch.fn).toBe(1);
       expect(firstMatch.args).toEqual({foo: 'hello'});
@@ -75,24 +75,25 @@ function(RouteNode, RouteTree, Router) {
   });
 
   describe('Router', function() {
-    var routeCb;
+    var routeCb,
+        router;
 
     beforeEach(function() {
       routeCb = jasmine.createSpy('routeCb');
-      Router.empty();
+      router  = new Router();
     });
 
     it('should call a match\'s callback', function() {
-      Router.addRoute('/test/foo', routeCb);
+      router.addRoute('/test/foo', routeCb);
       expect(routeCb).not.toHaveBeenCalled();
 
-      Router.route('/test/foo');
+      router.route('/test/foo');
       expect(routeCb).toHaveBeenCalledWith('/test/foo', {}, {});
     });
 
     it('should callback with the route\'s params', function() {
-      Router.addRoute('/test/:first/:second', routeCb);
-      Router.route('/test/arg/other');
+      router.addRoute('/test/:first/:second', routeCb);
+      router.route('/test/arg/other');
 
       expect(routeCb).toHaveBeenCalledWith('/test/arg/other', {
         first: 'arg',
@@ -101,8 +102,8 @@ function(RouteNode, RouteTree, Router) {
     });
 
     it('should callback with query paramters', function() {
-      Router.addRoute('/test', routeCb);
-      Router.route('/test?hello=world&test=first');
+      router.addRoute('/test', routeCb);
+      router.route('/test?hello=world&test=first');
 
       expect(routeCb).toHaveBeenCalledWith('/test?hello=world&test=first', {}, {
         hello: 'world',
@@ -111,8 +112,8 @@ function(RouteNode, RouteTree, Router) {
     });
 
     it('should handle empty query strings', function() {
-      Router.addRoute('/test', routeCb);
-      Router.route('/test?hey=&other=value');
+      router.addRoute('/test', routeCb);
+      router.route('/test?hey=&other=value');
 
       expect(routeCb).toHaveBeenCalledWith('/test?hey=&other=value', {}, {
         hey: '',
