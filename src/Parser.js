@@ -15,6 +15,7 @@ function(Binding) {
       var bindName = node.getAttribute('data-bind');
 
       if (!bindName) continue;
+    node.context = context;
 
       var binding = new Binding(node, context.lookup(bindName));
       binding.bind();

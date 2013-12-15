@@ -2,6 +2,7 @@ define([
  'PropertyStack',
  'Property',
  'ComputedProperty',
+  'Utils',
 
  'Context',
  'Binding',
@@ -13,6 +14,8 @@ define([
 function(PropertyStack, Property, ComputedProperty, Context, Binding, Parser, Router) {
 
   var Cola = {};
+
+  Cola.Utils            = Utils;
 
   Cola.PropertyStack    = PropertyStack;
   Cola.Property         = Property;
