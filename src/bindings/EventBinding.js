@@ -13,6 +13,7 @@ function(Property) {
 
     this.node      = node;
     this.eventName = nameSplit[0];
+    this.context   = context;
     this.handler   = context.lookup(nameSplit[1]);
   }
 
@@ -26,9 +27,9 @@ function(Property) {
     event.preventDefault();
 
     if (Property.isProperty(this.handler)) {
-      this.handler.get()(this.node, event);
+      this.handler.get()(this.node, event, this.context);
     } else {
-      this.handler(this.node, event);
+      this.handler(this.node, event, this.context);
     }
   };
 

@@ -195,7 +195,7 @@ function(Property, ComputedProperty, Context, Parser, ValueBinding, EventBinding
       evt.initEvent('change', true, true);
       input.dispatchEvent(evt);
 
-      expect(spy).toHaveBeenCalledWith(input, evt);
+      expect(spy).toHaveBeenCalledWith(input, evt, context);
     });
 
     it('should call the handler function wrapped in a Property when the event is fired', function() {
@@ -209,7 +209,7 @@ function(Property, ComputedProperty, Context, Parser, ValueBinding, EventBinding
       evt.initEvent('change', true, true);
       input.dispatchEvent(evt);
 
-      expect(spy).toHaveBeenCalledWith(input, evt);
+      expect(spy).toHaveBeenCalledWith(input, evt, context);
     });
 
     it('should allow for Property handlers to be swapped out', function() {
@@ -229,7 +229,7 @@ function(Property, ComputedProperty, Context, Parser, ValueBinding, EventBinding
       input.dispatchEvent(evt);
 
       expect(notCalledSpy.callCount).toBe(0);
-      expect(calledSpy).toHaveBeenCalledWith(input, evt);
+      expect(calledSpy).toHaveBeenCalledWith(input, evt, context);
     });
 
   });
