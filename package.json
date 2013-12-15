@@ -15,13 +15,14 @@
   },
   "author": "Alex Angelini",
   "license": "MIT",
-  "gitHead": "86e7d738bf8ff00b56c25fc96e60292e3ff2bfd7",
   "bugs": {
     "url": "https://github.com/SoapyIllusions/cola.js/issues"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
     "grunt-karma": "~0.4.5",
-    "grunt-contrib-jshint": "~0.6.0"
+    "grunt-contrib-jshint": "~0.6.0",
+    "grunt-requirejs": "~0.4.0",
+    "grunt-contrib-watch": "~0.5.3"
   }
 }
