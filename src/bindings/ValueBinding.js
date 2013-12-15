@@ -37,7 +37,16 @@ function(_, Property, ComputedProperty) {
 
   ValueBinding.prototype.setNode = function() {
     var value = this.property.get();
-    if (value) this.node.value = value;
+
+    if (!value) {
+      value = '';
+    }
+
+    if (this.isNodeEditable(this.node)) {
+      this.node.value = value;
+    } else {
+      this.node.innerHTML = value;
+    }
   };
 
   ValueBinding.prototype.setProperty = function() {

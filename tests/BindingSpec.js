@@ -168,6 +168,17 @@ function(Property, ComputedProperty, Context, Parser, ValueBinding, EventBinding
       expect(input.value).toBe('10');
     });
 
+    it('should set a node\'s innerHTML if it\'s not editable', function() {
+      var div     = document.createElement('div'),
+          binding = new ValueBinding(div, 'keypath', context);
+
+      binding.bind();
+
+      expect(div.innerHTML).toBe('');
+      prop.set('test');
+      expect(div.innerHTML).toBe('test');
+    });
+
   });
 
   describe('EventBinding', function() {
