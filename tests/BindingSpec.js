@@ -3,10 +3,11 @@ define([
   'ComputedProperty',
   'Context',
   'Parser',
-  'Binding'
+  'bindings/ValueBinding',
+  'bindings/EventBinding'
 ],
 
-function(Property, ComputedProperty, Context, Parser, Binding) {
+function(Property, ComputedProperty, Context, Parser, ValueBinding, EventBinding) {
 
   describe('Context', function() {
 
@@ -51,20 +52,46 @@ function(Property, ComputedProperty, Context, Parser, Binding) {
     });
 
     it('should detect data-bind attributes', function() {
-      var parser  = new Parser(div);
+      var parser = new Parser(div);
 
       div.firstChild.setAttribute('data-bind', 'keypath');
       div.lastChild.firstElementChild.setAttribute('data-bind', 'other.keypath');
 
-      spyOn(Binding.prototype, 'bind').andCallThrough();
+      spyOn(ValueBinding.prototype, 'bind');
       parser.parse(context);
 
-      expect(Binding.prototype.bind.callCount).toBe(2);
+      expect(ValueBinding.prototype.bind.callCount).toBe(2);
+    });
+
+    it('should detect data-event attributes', function() {
+      var parser = new Parser(div);
+
+      div.firstChild.setAttribute('data-event', 'change:keypath');
+      div.lastChild.firstElementChild.setAttribute('data-event', 'submit:other.keypath');
+
+      spyOn(EventBinding.prototype, 'bind');
+      parser.parse(context);
+
+      expect(EventBinding.prototype.bind.callCount).toBe(2);
+    });
+
+    it('should double bind a node with data-bind and data-event attributes', function() {
+      var parser = new Parser(div);
+
+      div.firstChild.setAttribute('data-bind', 'keypath');
+      div.firstChild.setAttribute('data-event', 'change:keypath');
+
+      spyOn(ValueBinding.prototype, 'bind');
+      spyOn(EventBinding.prototype, 'bind');
+      parser.parse(context);
+
+      expect(ValueBinding.prototype.bind.callCount).toBe(1);
+      expect(EventBinding.prototype.bind.callCount).toBe(1);
     });
 
   });
 
-  describe('Binding', function() {
+  describe('ValueBinding', function() {
     var input,
         prop,
         context;
@@ -78,8 +105,8 @@ function(Property, ComputedProperty, Context, Parser, Binding) {
     });
 
     it('should bind the node to JS property changes', function() {
-      var parser = new Parser(input);
-      parser.parse(context);
+      var binding = new ValueBinding(input, 'keypath', context);
+      binding.bind();
 
       expect(input.value).toBe('');
       prop.set('test');
@@ -87,8 +114,8 @@ function(Property, ComputedProperty, Context, Parser, Binding) {
     });
 
     it('should bind the JS properties to node changes', function() {
-      var parser = new Parser(input);
-      parser.parse(context);
+      var binding = new ValueBinding(input, 'keypath', context);
+      binding.bind();
 
       expect(prop.get()).toBeUndefined();
 
@@ -106,8 +133,8 @@ function(Property, ComputedProperty, Context, Parser, Binding) {
 
       context.add({keypath: new ComputedProperty(get)});
 
-      var parser = new Parser(input);
-      parser.parse(context);
+      var binding = new ValueBinding(input, 'keypath', context);
+      binding.bind();
 
       expect(input.value).toBe('hello world');
     });
@@ -118,8 +145,8 @@ function(Property, ComputedProperty, Context, Parser, Binding) {
 
       context.add({keypath: new ComputedProperty(get)});
 
-      var parser = new Parser(input);
-      parser.parse(context);
+      var binding = new ValueBinding(input, 'keypath', context);
+      binding.bind();
 
       input.value = 10;
       evt = document.createEvent('HTMLEvents');
@@ -127,6 +154,82 @@ function(Property, ComputedProperty, Context, Parser, Binding) {
       input.dispatchEvent(evt);
 
       expect(context.lookup('keypath').get()).toBe('hello world');
+    });
+
+    it('should statically set non property attributes', function() {
+      var obj = {other: 10};
+      context.add(obj);
+
+      var binding = new ValueBinding(input, 'other', context);
+      binding.bind();
+
+      expect(input.value).toBe('10');
+      obj.other = 20;
+      expect(input.value).toBe('10');
+    });
+
+  });
+
+  describe('EventBinding', function() {
+    var input,
+        prop,
+        context;
+
+    beforeEach(function() {
+      prop    = new Property();
+      context = new Context();
+      input   = document.createElement('input');
+
+
+      input.setAttribute('data-bind', 'keypath');
+    });
+
+    it('should call the handler function when the event is fired', function() {
+      var spy = jasmine.createSpy('spy');
+      context.add({keypath: spy});
+
+      var binding = new EventBinding(input, 'change:keypath', context);
+      binding.bind();
+
+      evt = document.createEvent('HTMLEvents');
+      evt.initEvent('change', true, true);
+      input.dispatchEvent(evt);
+
+      expect(spy).toHaveBeenCalledWith(input, evt);
+    });
+
+    it('should call the handler function wrapped in a Property when the event is fired', function() {
+      var spy = jasmine.createSpy('spy');
+      context.add({keypath: new Property(spy)});
+
+      var binding = new EventBinding(input, 'change:keypath', context);
+      binding.bind();
+
+      evt = document.createEvent('HTMLEvents');
+      evt.initEvent('change', true, true);
+      input.dispatchEvent(evt);
+
+      expect(spy).toHaveBeenCalledWith(input, evt);
+    });
+
+    it('should allow for Property handlers to be swapped out', function() {
+      var notCalledSpy    = jasmine.createSpy('notCalledSpy'),
+          calledSpy       = jasmine.createSpy('calledSpy'),
+          handlerProperty = new Property(notCalledSpy);
+
+      context.add({keypath: handlerProperty});
+
+      var binding = new EventBinding(input, 'change:keypath', context);
+      binding.bind();
+
+      handlerProperty.set(calledSpy);
+
+      evt = document.createEvent('HTMLEvents');
+      evt.initEvent('change', true, true);
+      input.dispatchEvent(evt);
+
+      expect(notCalledSpy.callCount).toBe(0);
+      expect(calledSpy).toHaveBeenCalledWith(input, evt);
     });
 
   });

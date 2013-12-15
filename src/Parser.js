@@ -1,8 +1,21 @@
 define([
-  'Binding'
+  'underscore',
+  'bindings/ValueBinding',
+  'bindings/EventBinding'
 ],
 
-function(Binding) {
+function(_, ValueBinding, EventBinding) {
+
+  var bindNode = function(node, context) {
+      _.each([ValueBinding, EventBinding], function(Binding) {
+        var bindName = node.getAttribute(Binding.ATTRIBUTE);
+
+        if (!bindName) return;
+
+        var binding = new Binding(node, bindName, context);
+        binding.bind();
+      });
+  };
 
   function Parser(root) {
     this.root = root;
@@ -11,14 +24,10 @@ function(Binding) {
   Parser.prototype.parse = function(context) {
     var node = this.root;
 
-    do {
-      var bindName = node.getAttribute('data-bind');
-
-      if (!bindName) continue;
     node.context = context;
 
-      var binding = new Binding(node, context.lookup(bindName));
-      binding.bind();
+    do {
+      bindNode(node, context);
     } while (node = this.nextNode(node));
   };
 

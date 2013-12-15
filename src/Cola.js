@@ -1,17 +1,20 @@
 define([
- 'PropertyStack',
- 'Property',
- 'ComputedProperty',
   'Utils',
 
- 'Context',
- 'Binding',
- 'Parser',
+  'PropertyStack',
+  'Property',
+  'ComputedProperty',
 
- 'Router'
+  'Context',
+  'bindings/ValueBinding',
+  'bindings/EventBinding',
+  'Parser',
+
+  'Router'
 ],
 
-function(PropertyStack, Property, ComputedProperty, Context, Binding, Parser, Router) {
+function(Utils, PropertyStack, Property, ComputedProperty, Context,
+         ValueBinding, EventBinding, Parser, Router) {
 
   var Cola = {};
 
@@ -22,7 +25,8 @@ function(PropertyStack, Property, ComputedProperty, Context, Binding, Parser, Ro
   Cola.ComputedProperty = ComputedProperty;
 
   Cola.Context          = Context;
-  Cola.Binding          = Binding;
+  Cola.ValueBinding     = ValueBinding;
+  Cola.EventBinding     = EventBinding;
   Cola.Parser           = Parser;
 
   Cola.Router           = Router;
