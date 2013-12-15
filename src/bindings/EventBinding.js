@@ -27,9 +27,9 @@ function(Property) {
     event.preventDefault();
 
     if (Property.isProperty(this.handler)) {
-      this.handler.get()(this.node, event, this.context);
+      this.handler.get()(this.node, event, this.context.data);
     } else {
-      this.handler(this.node, event, this.context);
+      this.handler(this.node, event, this.context.data);
     }
   };
 

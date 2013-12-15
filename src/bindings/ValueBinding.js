@@ -7,7 +7,7 @@ define([
 function(_, Property, ComputedProperty) {
 
   function ValueBinding(node, bindName, context) {
-    this.node = node;
+    this.node     = node;
     this.property = context.lookup(bindName);
   }
 

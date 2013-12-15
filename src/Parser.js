@@ -1,10 +1,11 @@
 define([
   'underscore',
+  'Context',
   'bindings/ValueBinding',
   'bindings/EventBinding'
 ],
 
-function(_, ValueBinding, EventBinding) {
+function(_, Context, ValueBinding, EventBinding) {
 
   var bindNode = function(node, context) {
       _.each([ValueBinding, EventBinding], function(Binding) {
@@ -24,6 +25,7 @@ function(_, ValueBinding, EventBinding) {
   Parser.prototype.parse = function(context) {
     var node = this.root;
 
+    context      = new Context(context);
     node.context = context;
 
     do {
