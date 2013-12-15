@@ -23,6 +23,8 @@ function(Property) {
   };
 
   EventBinding.prototype.callHandler = function(event) {
+    event.preventDefault();
+
     if (Property.isProperty(this.handler)) {
       this.handler.get()(this.node, event);
     } else {
