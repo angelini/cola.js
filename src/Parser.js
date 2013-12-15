@@ -1,15 +1,14 @@
 define([
-  'Binding',
-  'Keypath'
+  'Binding'
 ],
 
-function(Binding, Keypath) {
+function(Binding) {
 
   function Parser(root) {
     this.root = root;
   }
 
-  Parser.prototype.parse = function() {
+  Parser.prototype.parse = function(context) {
     var node = this.root;
 
     do {
@@ -17,7 +16,7 @@ function(Binding, Keypath) {
 
       if (!bindName) continue;
 
-      var binding = new Binding(node, Keypath.lookup(bindName));
+      var binding = new Binding(node, context.lookup(bindName));
       binding.bind();
     } while (node = this.nextNode(node));
   };

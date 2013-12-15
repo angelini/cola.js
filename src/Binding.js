@@ -1,9 +1,10 @@
 define([
   'underscore',
+  'Property',
   'ComputedProperty'
 ],
 
-function(_, ComputedProperty) {
+function(_, Property, ComputedProperty) {
 
   function Binding(node, property) {
     this.node = node;
@@ -12,6 +13,10 @@ function(_, ComputedProperty) {
 
   Binding.prototype.bind = function() {
     var self = this;
+
+    if (!Property.isProperty(this.property)) {
+      return this.node.value = this.property;
+    }
 
     this.property.on('change', this.setNode.bind(this));
 

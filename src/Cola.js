@@ -3,14 +3,14 @@ define([
  'Property',
  'ComputedProperty',
 
- 'Keypath',
+ 'Context',
  'Binding',
  'Parser',
 
  'Router'
 ],
 
-function(PropertyStack, Property, ComputedProperty, Keypath, Binding, Parser, Router) {
+function(PropertyStack, Property, ComputedProperty, Context, Binding, Parser, Router) {
 
   var Cola = {};
 
@@ -18,7 +18,7 @@ function(PropertyStack, Property, ComputedProperty, Keypath, Binding, Parser, Ro
   Cola.Property         = Property;
   Cola.ComputedProperty = ComputedProperty;
 
-  Cola.Keypath          = Keypath;
+  Cola.Context          = Context;
   Cola.Binding          = Binding;
   Cola.Parser           = Parser;
 

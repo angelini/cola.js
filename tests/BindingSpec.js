@@ -1,32 +1,33 @@
 define([
   'Property',
   'ComputedProperty',
-  'Keypath',
+  'Context',
   'Parser',
   'Binding'
 ],
 
-function(Property, ComputedProperty, Keypath, Parser, Binding) {
+function(Property, ComputedProperty, Context, Parser, Binding) {
 
-  describe('Keypath', function() {
+  describe('Context', function() {
 
-    it('should keep a map of all keypaths', function() {
-      var key = new Keypath('test', new Property('value'));
-      var prop = Keypath.lookup('test');
-      expect(prop.get()).toBe('value');
-    });
+    it('should read through mixed Property and native objects', function() {
+      var test    = { inner: new Property({foo: 1}) },
+          context = new Context({test: test});
 
-    it('should create the property if the name is not in the map', function() {
-      var prop = Keypath.lookup('not.present');
-      expect(prop).toEqual(jasmine.any(Property));
+      expect(context.lookup('test')).toBe(test);
+      expect(context.lookup('test.inner').get()).toEqual({foo: 1});
+      expect(context.lookup('test.inner.foo')).toBe(1);
     });
 
   });
 
   describe('Parser', function() {
-    var div;
+    var div,
+        context;
 
     beforeEach(function() {
+      context = new Context();
+
       div = document.createElement('div');
       div.innerHTML = ['<div>',
                        '  <p>Test</p>',
@@ -50,13 +51,13 @@ function(Property, ComputedProperty, Keypath, Parser, Binding) {
     });
 
     it('should detect data-bind attributes', function() {
-      var parser = new Parser(div);
+      var parser  = new Parser(div);
 
       div.firstChild.setAttribute('data-bind', 'keypath');
       div.lastChild.firstElementChild.setAttribute('data-bind', 'other.keypath');
 
       spyOn(Binding.prototype, 'bind').andCallThrough();
-      parser.parse();
+      parser.parse(context);
 
       expect(Binding.prototype.bind.callCount).toBe(2);
     });
@@ -64,20 +65,21 @@ function(Property, ComputedProperty, Keypath, Parser, Binding) {
   });
 
   describe('Binding', function() {
-    var input;
-    var prop;
+    var input,
+        prop,
+        context;
 
     beforeEach(function() {
-      Keypath.empty();
+      prop    = new Property();
+      context = new Context({keypath: prop});
+      input   = document.createElement('input');
 
-      input = document.createElement('input');
       input.setAttribute('data-bind', 'keypath');
-      prop = Keypath.lookup('keypath');
     });
 
     it('should bind the node to JS property changes', function() {
       var parser = new Parser(input);
-      parser.parse();
+      parser.parse(context);
 
       expect(input.value).toBe('');
       prop.set('test');
@@ -86,7 +88,7 @@ function(Property, ComputedProperty, Keypath, Parser, Binding) {
 
     it('should bind the JS properties to node changes', function() {
       var parser = new Parser(input);
-      parser.parse();
+      parser.parse(context);
 
       expect(prop.get()).toBeUndefined();
 
@@ -98,31 +100,33 @@ function(Property, ComputedProperty, Keypath, Parser, Binding) {
       expect(prop.get()).toBe('10');
     });
 
-    it('should bind the node to computer properties', function() {
+    it('should bind the node to computed properties', function() {
       var dep = new Property(['hello', 'world']);
-      var get = function() { return dep.get().join(' '); };
-      var computedKey = new Keypath('keypath', new ComputedProperty(get));
+          get = function() { return dep.get().join(' '); };
+
+      context.add({keypath: new ComputedProperty(get)});
 
       var parser = new Parser(input);
-      parser.parse();
+      parser.parse(context);
 
       expect(input.value).toBe('hello world');
     });
 
-    it('should not try and set computer properties', function() {
+    it('should not try and set computed properties', function() {
       var dep = new Property(['hello', 'world']);
-      var get = function() { return dep.get().join(' '); };
-      var computedKey = new Keypath('keypath', new ComputedProperty(get));
+          get = function() { return dep.get().join(' '); };
+
+      context.add({keypath: new ComputedProperty(get)});
 
       var parser = new Parser(input);
-      parser.parse();
+      parser.parse(context);
 
       input.value = 10;
       evt = document.createEvent('HTMLEvents');
       evt.initEvent('change', true, true);
       input.dispatchEvent(evt);
 
-      expect(prop.get()).toBeUndefined();
+      expect(context.lookup('keypath').get()).toBe('hello world');
     });
 
   });

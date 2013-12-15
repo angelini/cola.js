@@ -1,16 +1,21 @@
 define([
   'underscore',
   'eventemitter2',
-  'PropertyStack'
+  'PropertyStack',
+  'ComputedProperty'
 ],
 
-function(_, EventEmitter, PropertyStack) {
+function(_, EventEmitter, PropertyStack, ComputedProperty) {
 
   function Property(value) {
     this.value = value;
   }
 
   _.extend(Property.prototype, EventEmitter.prototype);
+
+  Property.isProperty = function(obj) {
+    return obj instanceof Property || obj instanceof ComputedProperty;
+  };
 
   Property.prototype.get = function() {
     PropertyStack.addDependency(this);
