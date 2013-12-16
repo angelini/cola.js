@@ -22,12 +22,19 @@ function(_, Property, ComputedProperty) {
     return fetchKey(keys, value);
   };
 
-  function Context(data) {
-    this.data = data || {};
+  function Context(data, parent) {
+    this.data   = data || {};
+    this.parent = parent;
   }
 
   Context.prototype.lookup = function(keypath) {
-    return fetchKey(keypath.split('.'), this.data);
+    var result,
+        context = this;
+
+    do {
+      result = fetchKey(keypath.split('.'), context.data);
+      if (result !== undefined) return result;
+    } while (context = context.parent);
   };
 
   Context.prototype.add = function(key, value) {
@@ -40,6 +47,10 @@ function(_, Property, ComputedProperty) {
     }
 
     _.extend(this.data, newData);
+  };
+
+  Context.prototype.extend = function(newData) {
+    return new Context(newData, this);
   };
 
   return Context;

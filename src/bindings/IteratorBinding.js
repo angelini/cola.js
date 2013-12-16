@@ -50,11 +50,12 @@ function(_, require, Property, Parser) {
     this.iterations = [];
 
     _.each(list, function(element) {
-      var clone   = self.clone.cloneNode(true),
-          parser  = new (require('Parser'))(clone);
+      var newContext = {},
+          clone      = self.clone.cloneNode(true),
+          parser     = new (require('Parser'))(clone);
 
-      self.context.add(self.iteration, element);
-      parser.parse(self.context.data);
+      newContext[self.iteration] = element;
+      parser.parse(self.context.extend(newContext).data);
 
       self.iterations.push(clone);
       self.parent.insertBefore(clone, self.commentNode);

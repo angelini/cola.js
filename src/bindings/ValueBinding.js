@@ -7,8 +7,8 @@ define([
 function(_, Property, ComputedProperty) {
 
   function ValueBinding(node, bindName, context) {
-    this.node     = node;
-    this.property = context.lookup(bindName);
+    this.node  = node;
+    this.value = context.lookup(bindName);
   }
 
   ValueBinding.ATTRIBUTE = 'data-bind';
@@ -16,16 +16,14 @@ function(_, Property, ComputedProperty) {
   ValueBinding.prototype.bind = function() {
     var self = this;
 
-    if (!Property.isProperty(this.property)) {
-      return this.node.value = this.property;
-    }
+    if (Property.isProperty(this.value)) {
+      this.value.on('change', this.setNode.bind(this));
 
-    this.property.on('change', this.setNode.bind(this));
-
-    if (this.isNodeEditable(this.node) && !(this.property instanceof ComputedProperty)) {
-      _.each(['change', 'input', 'keyup'], function(eventName) {
-        self.node.addEventListener('change', self.setProperty.bind(self));
-      });
+      if (this.isNodeEditable(this.node) && !(this.value instanceof ComputedProperty)) {
+        _.each(['change', 'input', 'keyup'], function(eventName) {
+          self.node.addEventListener('change', self.setValue.bind(self));
+        });
+      }
     }
 
     this.setNode();
@@ -36,7 +34,7 @@ function(_, Property, ComputedProperty) {
   };
 
   ValueBinding.prototype.setNode = function() {
-    var value = this.property.get();
+    var value = Property.isProperty(this.value) ? this.value.get() : this.value;
 
     if (!value) {
       value = '';
@@ -49,8 +47,8 @@ function(_, Property, ComputedProperty) {
     }
   };
 
-  ValueBinding.prototype.setProperty = function() {
-    this.property.set(this.node.value);
+  ValueBinding.prototype.setValue = function() {
+    this.value.set(this.node.value);
   };
 
   return ValueBinding;
