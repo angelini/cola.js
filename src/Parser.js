@@ -14,16 +14,21 @@ function(_, Context, ValueBinding, EventBinding, IteratorBinding) {
   ];
 
   var bindNode = function(node, context) {
-    return !!_.some(orderedBindings, function(Binding) {
+    var skip = !!_.some(orderedBindings, function(Binding) {
       var bindName = node.getAttribute(Binding.ATTRIBUTE);
 
       if (!bindName) return;
 
-      var binding = new Binding(node, bindName, context);
-      binding.bind();
+      var binding = new Binding(node, bindName, context),
+          newNode = binding.bind();
 
-      if (Binding.SKIP_CHILDREN) return true;
+      if (Binding.SKIP_CHILDREN) {
+        node = newNode;
+        return true;
+      }
     });
+
+    return [skip, node];
   };
 
   function Parser(root) {
@@ -34,12 +39,16 @@ function(_, Context, ValueBinding, EventBinding, IteratorBinding) {
     var node         = this.root,
         skipChildren = false;
 
-    context      = new Context(context);
+    if (!(context instanceof Context)) {
+      context = new Context(context);
+    }
+
     node.context = context;
 
     do {
-      skipChildren = bindNode(node, context);
-    } while (node = this.nextNode(node, skipChildren));
+      bindingResult = bindNode(node, context);
+      node = bindingResult[1];
+    } while (node = this.nextNode(node, bindingResult[0]));
   };
 
   Parser.prototype.nextNode = function(node, skipChildren) {

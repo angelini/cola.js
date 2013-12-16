@@ -1,95 +1,15 @@
 define([
   'Property',
   'ComputedProperty',
-  'Context',
   'Parser',
+  'Context',
+
   'bindings/ValueBinding',
-  'bindings/EventBinding'
+  'bindings/EventBinding',
+  'bindings/IteratorBinding'
 ],
 
-function(Property, ComputedProperty, Context, Parser, ValueBinding, EventBinding) {
-
-  describe('Context', function() {
-
-    it('should read through mixed Property and native objects', function() {
-      var test    = { inner: new Property({foo: 1}) },
-          context = new Context({test: test});
-
-      expect(context.lookup('test')).toBe(test);
-      expect(context.lookup('test.inner').get()).toEqual({foo: 1});
-      expect(context.lookup('test.inner.foo')).toBe(1);
-    });
-
-  });
-
-  describe('Parser', function() {
-    var div,
-        context;
-
-    beforeEach(function() {
-      context = {};
-
-      div = document.createElement('div');
-      div.innerHTML = ['<div>',
-                       '  <p>Test</p>',
-                       '  <span></span>',
-                       '</div>',
-                       '<div>',
-                       '  <div>',
-                       '    <p></p>',
-                       '  </div>',
-                       '</div>'
-                      ].join('');
-    });
-
-    it('should iterate over every node', function() {
-      var parser = new Parser(div);
-      spyOn(parser, 'nextNode').andCallThrough();
-
-      parser.parse();
-
-      expect(parser.nextNode.callCount).toBe(7);
-    });
-
-    it('should detect data-bind attributes', function() {
-      var parser = new Parser(div);
-
-      div.firstChild.setAttribute('data-bind', 'keypath');
-      div.lastChild.firstElementChild.setAttribute('data-bind', 'other.keypath');
-
-      spyOn(ValueBinding.prototype, 'bind');
-      parser.parse(context);
-
-      expect(ValueBinding.prototype.bind.callCount).toBe(2);
-    });
-
-    it('should detect data-event attributes', function() {
-      var parser = new Parser(div);
-
-      div.firstChild.setAttribute('data-event', 'change:keypath');
-      div.lastChild.firstElementChild.setAttribute('data-event', 'submit:other.keypath');
-
-      spyOn(EventBinding.prototype, 'bind');
-      parser.parse(context);
-
-      expect(EventBinding.prototype.bind.callCount).toBe(2);
-    });
-
-    it('should double bind a node with data-bind and data-event attributes', function() {
-      var parser = new Parser(div);
-
-      div.firstChild.setAttribute('data-bind', 'keypath');
-      div.firstChild.setAttribute('data-event', 'change:keypath');
-
-      spyOn(ValueBinding.prototype, 'bind');
-      spyOn(EventBinding.prototype, 'bind');
-      parser.parse(context);
-
-      expect(ValueBinding.prototype.bind.callCount).toBe(1);
-      expect(EventBinding.prototype.bind.callCount).toBe(1);
-    });
-
-  });
+function(Property, ComputedProperty, Parser, Context, ValueBinding, EventBinding, IteratorBinding) {
 
   describe('ValueBinding', function() {
     var input,
@@ -240,6 +160,56 @@ function(Property, ComputedProperty, Context, Parser, ValueBinding, EventBinding
 
       expect(notCalledSpy.callCount).toBe(0);
       expect(calledSpy).toHaveBeenCalledWith(input, evt, context);
+    });
+
+  });
+
+  describe('IteratorBinding', function() {
+    var div;
+
+    beforeEach(function() {
+      div = document.createElement('div');
+      div.innerHTML = ['<ul>',
+                       '  <li data-iterator="elem:list">',
+                       '    <p data-bind="elem"></p>',
+                       '  </li>',
+                       '</ul>',
+                       '<div>',
+                       '  <p>',
+                       '</div>'
+                      ].join('');
+    });
+
+    it('should add and remove children as it\'s source list changes', function() {
+      var ul      = div.firstElementChild,
+          li      = ul.firstElementChild,
+          list    = new Property([]),
+          binding = new IteratorBinding(li, 'elem:list', new Context({ list: list }));
+
+      binding.bind();
+      expect(ul.children.length).toBe(0);
+
+      list.set([1, 2, 3]);
+      expect(ul.children.length).toBe(3);
+
+      list.set([1]);
+      expect(ul.children.length).toBe(1);
+    });
+
+    it('should give iteration an extended Context', function() {
+      var ul      = div.firstElementChild,
+          li      = ul.firstElementChild,
+          list    = new Property([1, 2]),
+          context = new Context({ list: list }),
+          binding = new IteratorBinding(li, 'elem:list', context);
+
+      binding.bind();
+
+      expect(ul.children[0].context.parent).toBe(context);
+      expect(ul.children[1].context.parent).toBe(context);
+
+      expect(ul.children[0].context.lookup('elem')).toBe(1);
+      expect(ul.children[1].context.lookup('elem')).toBe(2);
     });
 
   });
