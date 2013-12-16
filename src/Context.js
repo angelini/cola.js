@@ -30,7 +30,15 @@ function(_, Property, ComputedProperty) {
     return fetchKey(keypath.split('.'), this.data);
   };
 
-  Context.prototype.add = function(newData) {
+  Context.prototype.add = function(key, value) {
+    var newData = {};
+
+    if (typeof(key) == 'object') {
+      newData = key;
+    } else {
+      newData[key] = value;
+    }
+
     _.extend(this.data, newData);
   };
 
