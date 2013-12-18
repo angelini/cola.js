@@ -1,4 +1,6 @@
 define([
+  'underscore',
+  'eventemitter2',
   'Utils',
 
   'PropertyStack',
@@ -13,11 +15,13 @@ define([
   'Router'
 ],
 
-function(Utils, PropertyStack, Property, ComputedProperty, Context,
-         ValueBinding, EventBinding, Parser, Router) {
+function(_, EventEmitter, Utils, PropertyStack, Property, ComputedProperty,
+         Context, ValueBinding, EventBinding, Parser, Router) {
 
   var Cola = {};
 
+  Cola._                = _;
+  Cola.EventEmitter     = EventEmitter;
   Cola.Utils            = Utils;
 
   Cola.PropertyStack    = PropertyStack;
