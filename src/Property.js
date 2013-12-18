@@ -1,6 +1,7 @@
 define([
   'underscore',
   'eventemitter2',
+
   'PropertyStack',
   'ComputedProperty'
 ],

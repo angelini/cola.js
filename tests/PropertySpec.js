@@ -22,8 +22,8 @@ function(PropertyStack, Property, ComputedProperty) {
     });
 
     it('should emit change events', function() {
-      var prop = new Property('first');
-      var changeCb = jasmine.createSpy('changeCb');
+      var prop     = new Property('first'),
+          changeCb = jasmine.createSpy('changeCb');
 
       prop.on('change', changeCb);
 
@@ -57,24 +57,25 @@ function(PropertyStack, Property, ComputedProperty) {
     });
 
     it('should set a function argument as the getter', function() {
-      var fn = function() {};
-      var prop = new ComputedProperty(fn);
+      var fn   = function() {},
+          prop = new ComputedProperty(fn);
+
       expect(prop.getter).toBe(fn);
     });
 
     it('should compute it\'s value on get', function() {
-      var dep = new Property(3);
-      var get = function() { return dep.get() + 2; };
-      var prop = new ComputedProperty(get);
+      var dep  = new Property(3),
+          get  = function() { return dep.get() + 2; },
+          prop = new ComputedProperty(get);
 
       expect(prop.get()).toBe(5);
       expect(prop.value).toBe(5);
     });
 
     it('should add fetched properties to it\'s dependencies', function() {
-      var dep = new Property(3);
-      var get = function() { return dep.get() + 2; };
-      var prop = new ComputedProperty(get);
+      var dep  = new Property(3),
+          get  = function() { return dep.get() + 2; },
+          prop = new ComputedProperty(get);
 
       prop.get();
       expect(prop.dependencies.length).toBe(1);
@@ -82,9 +83,9 @@ function(PropertyStack, Property, ComputedProperty) {
     });
 
     it('should recalculate it\'s value when a dependency changes', function() {
-      var dep = new Property(3);
-      var get = function() { return dep.get() + 2; };
-      var prop = new ComputedProperty(get);
+      var dep  = new Property(3),
+          get  = function() { return dep.get() + 2; },
+          prop = new ComputedProperty(get);
 
       expect(prop.get()).toBe(5);
 
@@ -93,9 +94,9 @@ function(PropertyStack, Property, ComputedProperty) {
     });
 
     it('should only leave one listener on a dep after multiple gets', function() {
-      var dep = new Property(3);
-      var get = function() { return dep.get() + 2; };
-      var prop = new ComputedProperty(get);
+      var dep  = new Property(3),
+          get  = function() { return dep.get() + 2; },
+          prop = new ComputedProperty(get);
 
       prop.get();
       prop.get();
@@ -104,9 +105,9 @@ function(PropertyStack, Property, ComputedProperty) {
     });
 
     it('should emit change events', function() {
-      var dep = new Property(3);
-      var get = function() { return dep.get() + 2; };
-      var prop = new ComputedProperty(get);
+      var dep  = new Property(3),
+          get  = function() { return dep.get() + 2; },
+          prop = new ComputedProperty(get);
 
       var changeCb = jasmine.createSpy('changeCb');
       prop.on('change', changeCb);
@@ -114,6 +115,18 @@ function(PropertyStack, Property, ComputedProperty) {
       expect(changeCb).not.toHaveBeenCalled();
       dep.set(5);
       expect(changeCb).toHaveBeenCalledWith(7, 5);
+    });
+
+    it('should work two levels deep', function() {
+      var dep    = new Property(3),
+          first  = new ComputedProperty(function() { return dep.get() + 2; }),
+          second = new ComputedProperty(function() {
+            return dep.get() + first.get();
+          });
+
+      expect(second.get()).toBe(8);
+      dep.set(5);
+      expect(second.get()).toBe(12);
     });
 
   });
