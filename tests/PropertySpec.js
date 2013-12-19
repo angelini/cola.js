@@ -32,6 +32,16 @@ function(PropertyStack, Property, ComputedProperty) {
       expect(changeCb).toHaveBeenCalledWith('second', 'first');
     });
 
+    it('should not emit change events if the values are the same', function() {
+      var prop     = new Property(3),
+          changeCb = jasmine.createSpy('changeCb');
+
+      prop.on('change', changeCb);
+
+      prop.set(3);
+      expect(changeCb).not.toHaveBeenCalled();
+    });
+
   });
 
   describe('Property Stack', function() {

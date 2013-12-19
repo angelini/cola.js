@@ -25,9 +25,9 @@ function(_, EventEmitter, PropertyStack, ComputedProperty) {
 
   Property.prototype.set = function(value) {
     var oldValue = this.value;
-
     this.value = value;
-    this.emit('change', value, oldValue);
+
+    if (value !== oldValue) this.emit('change', value, oldValue);
 
     return value;
   };
