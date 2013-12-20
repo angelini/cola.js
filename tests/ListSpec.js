@@ -2,10 +2,11 @@ define([
   'Property',
   'ComputedProperty',
   'List',
-  'MappedList'
+  'MappedList',
+  'FilteredList'
 ],
 
-function(Property, ComputedProperty, List, MappedList) {
+function(Property, ComputedProperty, List, MappedList, FilteredList) {
 
   describe('List', function() {
 
@@ -151,6 +152,69 @@ function(Property, ComputedProperty, List, MappedList) {
       list.remove(0);
 
       expect(map.size()).toBe(2);
+    });
+
+  });
+
+  describe('FilteredList', function() {
+    var list;
+
+    beforeEach(function() {
+      list = new List([1, 2, 3, 4]);
+    });
+
+    it('should filter list elements using the input function', function() {
+      var filtered = new FilteredList(list, function(item) {
+        return item.get() > 2;
+      });
+
+      expect(filtered.size()).toBe(2);
+      expect(filtered.get()[0]).toEqual(jasmine.any(Property));
+      expect(filtered.get()[1].get()).toBe(4);
+    });
+
+    it('should update as changing items pass the filter', function() {
+      var filtered = new FilteredList(list, function(item) {
+        return item.get() > 2;
+      });
+
+      list.update(1, 5);
+      expect(filtered.size()).toBe(3);
+
+      list.update(3, 1);
+      expect(filtered.size()).toBe(2);
+    });
+
+    it('should update as other deps cause the filter to pass', function() {
+      var dep      = new Property(false),
+          filtered = new FilteredList(list, function(item) {
+            return dep.get() && item.get();
+          });
+
+      expect(filtered.size()).toBe(0);
+
+      dep.set(true);
+      expect(filtered.size()).toBe(4);
+    });
+
+    it('should grow if newly added values pass the filter', function() {
+      var filtered = new FilteredList(list, function(item) {
+        return item.get() > 2;
+      });
+
+      list.push(2, 5);
+      expect(filtered.size()).toBe(3);
+    });
+
+    it('should shrink as passing values are removed', function() {
+      var filtered = new FilteredList(list, function(item) {
+        return item.get() > 2;
+      });
+
+      list.remove(0);
+      list.remove(2);
+
+      expect(filtered.size()).toBe(1);
     });
 
   });

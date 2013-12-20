@@ -18,6 +18,10 @@ function(_, EventEmitter, PropertyStack, ComputedProperty) {
     return obj instanceof Property || obj instanceof ComputedProperty;
   };
 
+  Property.toProperty = function(value) {
+    return Property.isProperty(value) ? value : new Property(value);
+  };
+
   Property.prototype.get = function() {
     PropertyStack.addDependency(this);
     return this.value;

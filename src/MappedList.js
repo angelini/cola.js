@@ -8,10 +8,6 @@ define([
 
 function(_, EventEmitter, List, ComputedProperty) {
 
-  var toList = function(values) {
-    return List.isList(values) ? values : new List(values);
-  };
-
   var mapValue = function(value, mapFn) {
     return new ComputedProperty(function() {
       return mapFn(value);
@@ -22,8 +18,8 @@ function(_, EventEmitter, List, ComputedProperty) {
     var old       = this.mapped[index],
         newMapped = mapValue(newVal, this.mapFn);
 
-    old.off('change', this.listeners[index]);
-    newMapped.on('change', this.listeners[index] = watchValue.bind(this, index));
+    old.off('change', this.matchers[index]);
+    newMapped.on('change', this.matchers[index] = watchValue.bind(this, index));
 
     this.mapped[index] = newMapped;
     this.emit('update', newMapped, old);
@@ -40,9 +36,9 @@ function(_, EventEmitter, List, ComputedProperty) {
       var index = indexes[iterationIndex];
 
       self.mapped.splice(index, 0, comp);
-      self.listeners.splice(index, 0, watchValue.bind(self, index));
+      self.matchers.splice(index, 0, watchValue.bind(self, index));
 
-      comp.on('change', self.listeners[index]);
+      comp.on('change', self.matchers[index]);
     });
 
     this.emit('add', newMapped, indexes);
@@ -57,9 +53,9 @@ function(_, EventEmitter, List, ComputedProperty) {
     _.each(old, function(comp, iterationIndex) {
       var index = indexes[iterationIndex];
 
-      comp.off('change', self.listeners[index]);
+      comp.off('change', self.matchers[index]);
 
-      self.listeners.splice(index, 1);
+      self.matchers.splice(index, 1);
       self.mapped.splice(index, 1);
     });
 
@@ -73,13 +69,13 @@ function(_, EventEmitter, List, ComputedProperty) {
   function MappedList(values, mapFn) {
     var self = this;
 
-    this.mapFn     = mapFn;
-    this.list      = toList(values);
-    this.listeners = [];
+    this.mapFn    = mapFn;
+    this.list     = List.toList(values);
+    this.matchers = [];
 
     this.mapped = _.map(this.list.get(), function(value, index) {
       var comp = mapValue(value, mapFn);
-      comp.on('change', self.listeners[index] = watchValue.bind(self, index));
+      comp.on('change', self.matchers[index] = watchValue.bind(self, index));
       return comp;
     });
 

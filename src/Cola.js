@@ -6,8 +6,10 @@ define([
   'PropertyStack',
   'Property',
   'ComputedProperty',
+
   'List',
   'MappedList',
+  'FilteredList',
 
   'Context',
   'bindings/ValueBinding',
@@ -17,8 +19,8 @@ define([
   'Router'
 ],
 
-function(_, EventEmitter, Utils, PropertyStack, Property, ComputedProperty,
-         List, MappedList, Context, ValueBinding, EventBinding, Parser, Router) {
+function(_, EventEmitter, Utils, PropertyStack, Property, ComputedProperty, List,
+         MappedList, FilteredList, Context, ValueBinding, EventBinding, Parser, Router) {
 
   var Cola = {};
 
@@ -29,8 +31,10 @@ function(_, EventEmitter, Utils, PropertyStack, Property, ComputedProperty,
   Cola.PropertyStack    = PropertyStack;
   Cola.Property         = Property;
   Cola.ComputedProperty = ComputedProperty;
+
   Cola.List             = List;
   Cola.MappedList       = MappedList;
+  Cola.FilteredList     = FilteredList;
 
   Cola.Context          = Context;
   Cola.ValueBinding     = ValueBinding;
