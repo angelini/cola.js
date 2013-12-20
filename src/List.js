@@ -1,11 +1,12 @@
 define([
   'underscore',
+  'require',
   'eventemitter2',
 
   'Property'
 ],
 
-function(_, EventEmitter, Property) {
+function(_, require, EventEmitter, Property)  {
 
   var toProperty = function(value) {
     return Property.isProperty(value) ? value : new Property(value);
@@ -15,6 +16,10 @@ function(_, EventEmitter, Property) {
     return _.map(values, toProperty);
   };
 
+  var watchValue = function(index) {
+    this.emit('update', this.at(index), index);
+  };
+
   function List(values) {
     var self = this;
 
@@ -22,11 +27,19 @@ function(_, EventEmitter, Property) {
     this.listeners = [];
 
     _.each(this.values, function(value, index) {
-      value.on('change', self.listeners[index] = self._watchValue(index));
+      value.on('change', self.listeners[index] = watchValue.bind(self, index));
     });
   }
 
   _.extend(List.prototype, EventEmitter.prototype);
+
+  List.isList = function(values) {
+    return values instanceof List || values instanceof require('MappedList');
+  };
+
+  List.prototype.size = function() {
+    return this.values.length;
+  };
 
   List.prototype.at = function(index) {
     return this.values[index];
@@ -49,25 +62,30 @@ function(_, EventEmitter, Property) {
     this.emit('remove', old, _.range(old.length));
   };
 
+  List.prototype.set = function(newVals) {
+    if (this.values.length) this.clear();
+    this.push.apply(this, newVals);
+  };
+
   List.prototype.update = function(index, value) {
     var old    = this.at(index),
         newVal = toProperty(value);
 
     old.off('change', this.listeners[index]);
-    newVal.on('change', this.listeners[index] = this._watchValue(index));
+    newVal.on('change', this.listeners[index] = watchValue.bind(this, index));
 
     this.values[index] = newVal;
-    this.emit('update', newVal, old, index);
+    this.emit('update', newVal, index);
   };
 
   List.prototype.insert = function(index, value) {
     var newVal = toProperty(value);
 
-    this.listeners.splice(index, 0, this._watchValue(index));
+    this.listeners.splice(index, 0, watchValue.bind(this, index));
     newVal.on('change', this.listeners[index]);
 
     this.values.splice(index, 0, newVal);
-    this.emit('add', [value], [index]);
+    this.emit('add', [newVal], [index]);
   };
 
   List.prototype.remove = function(index) {
@@ -77,29 +95,21 @@ function(_, EventEmitter, Property) {
     delete this.listeners[index];
 
     this.values.splice(index, 1);
-    this.emit('remove', [old], index);
+    this.emit('remove', [old], [index]);
   };
 
   List.prototype.push = function() {
     var self  = this,
         args  = Array.prototype.slice.call(arguments),
-        props = toProperties(props),
+        props = toProperties(args),
         old   = this.values;
 
     _.each(props, function(prop, index) {
-      prop.on('change', self.listeners[index] = self._watchValue(index));
+      prop.on('change', self.listeners[index] = watchValue.bind(self, index));
     });
 
     this.values = this.values.concat(props);
-    this.emit('add', props, _.range(old.length, this.values.length));
-  };
-
-  List.prototype._watchValue = function(index) {
-    var self = this;
-
-    return function(newVal, oldVal) {
-      self.emit('update', newVal, oldVal, index);
-    };
+    this.emit('add', props, _.range(old.length, old.length + this.values.length));
   };
 
   return List;
