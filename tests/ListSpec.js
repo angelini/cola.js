@@ -31,7 +31,7 @@ function(Property, ComputedProperty, List, MappedList, FilteredList) {
       list.on('update', updateSpy);
       expect(updateSpy).not.toHaveBeenCalled();
 
-      list.get()[1].set(3);
+      list.at(1).set(3);
       expect(updateSpy.calls[0].args[0].get()).toBe(3);
       expect(updateSpy.calls[0].args[1]).toBe(1);
     });
@@ -87,7 +87,7 @@ function(Property, ComputedProperty, List, MappedList, FilteredList) {
       list.push(4, 5);
 
       expect(addSpy).toHaveBeenCalled();
-      expect(list.get().length).toBe(5);
+      expect(list.size()).toBe(5);
     });
 
   });
