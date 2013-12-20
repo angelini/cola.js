@@ -14,6 +14,8 @@ function(_, EventEmitter, List, MappedList) {
     this.filtered = _.filter(this.list.get(), function(value, index) {
       return self.filterMap.at(index).get();
     });
+
+    this.emit('change', this.filtered);
   };
 
   function FilteredList(values, filterFn) {

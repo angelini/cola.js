@@ -217,6 +217,18 @@ function(Property, ComputedProperty, List, MappedList, FilteredList) {
       expect(filtered.size()).toBe(1);
     });
 
+    it('should fire change events', function() {
+      var changeSpy = jasmine.createSpy('changeSpy'),
+          filtered = new FilteredList(list, function(item) {
+            return item.get() > 2;
+          });
+
+      filtered.on('change', changeSpy);
+      list.push(5);
+
+      expect(changeSpy).toHaveBeenCalledWith(filtered.get());
+    });
+
   });
 
 });
