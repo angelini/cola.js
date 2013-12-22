@@ -6,22 +6,6 @@ define([
 
 function(_, Property, ComputedProperty) {
 
-  var fetchKey = function(keys, data) {
-    var key = keys.shift();
-
-    if (!key) {
-      return data;
-    }
-
-    var value = Property.isProperty(data)? data.get()[key] : data[key];
-
-    if (!value) {
-      return undefined;
-    }
-
-    return fetchKey(keys, value);
-  };
-
   function Context(data, parent) {
     this.data   = data || {};
     this.parent = parent;
@@ -32,7 +16,7 @@ function(_, Property, ComputedProperty) {
         context = this;
 
     do {
-      result = fetchKey(keypath.split('.'), context.data);
+      result = Property.lookup(keypath, context.data);
       if (result !== undefined) return result;
     } while (context = context.parent);
   };

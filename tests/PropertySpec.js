@@ -42,6 +42,14 @@ function(PropertyStack, Property, ComputedProperty) {
       expect(changeCb).not.toHaveBeenCalled();
     });
 
+    it('should look through it\'s data object if get is called with a keypath', function() {
+      var foo  = {bar: new Property(6)},
+          prop = new Property({foo: foo});
+
+      expect(prop.get('foo')).toBe(foo);
+      expect(prop.get('foo.bar')).toBe(foo.bar);
+    });
+
   });
 
   describe('Property Stack', function() {
