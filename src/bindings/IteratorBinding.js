@@ -66,11 +66,11 @@ function(_, require, Property, List, Parser) {
 
     if (Property.isProperty(this.items) || List.isList(this.items)) {
       items = this.items.get();
-    } else if (!this.items) {
-      items = [];
     } else {
       items = this.items;
     }
+
+    if (!items) return;
 
     _.each(items, function(element, index) {
       if (self.iterations[index]) {
@@ -81,7 +81,6 @@ function(_, require, Property, List, Parser) {
     });
 
     var extraCount = this.iterations.length - items.length;
-
     if (extraCount > 0) {
       this.remove(_.range(items.length, items.length + extraCount));
     }
