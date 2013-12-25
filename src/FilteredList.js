@@ -8,7 +8,7 @@ define([
 
 function(_, EventEmitter, List, MappedList) {
 
-  var filteredIndex = function(index, mappedList) {
+  var filteredIndex = function(mappedList, index) {
     var result = 0;
 
     _.times(index, function(iterationIndex) {
@@ -28,9 +28,9 @@ function(_, EventEmitter, List, MappedList) {
     this.filtered = runFilter(this.list, this.mappedList);
 
     if (newVal.get()) {
-      this.emit('add', [this.list.at(index)], [filteredIndex(index, this.mappedList)]);
+      this.emit('add', [this.list.at(index)], [filteredIndex(this.mappedList, index)]);
     } else {
-      this.emit('remove', [this.list.at(index)], [filteredIndex(index, this.mappedList)]);
+      this.emit('remove', [this.list.at(index)], [filteredIndex(this.mappedList, index)]);
     }
   };
 
@@ -46,7 +46,7 @@ function(_, EventEmitter, List, MappedList) {
 
       if (newVal.get()) {
         addedItems.push(self.list.at(index));
-        addedIndexes.push(filteredIndex(index, self.mappedList));
+        addedIndexes.push(filteredIndex(self.mappedList, index));
       }
     });
 
@@ -65,7 +65,7 @@ function(_, EventEmitter, List, MappedList) {
 
       if (self.filterFn(oldVal)) {
         removedItems.push(oldVal);
-        removedIndexes.push(filteredIndex(index, self.mappedList));
+        removedIndexes.push(filteredIndex(self.mappedList, index));
       }
     });
 
@@ -89,7 +89,7 @@ function(_, EventEmitter, List, MappedList) {
     this.list.on('remove', onRemove.bind(this));
     this.list.on('update', function(newVal, index) {
       if (self.mappedList.at(index).get()) {
-        self.emit('update', newVal, filteredIndex(index, self.mappedList));
+        self.emit('update', newVal, filteredIndex(self.mappedList, index));
       }
     });
   }

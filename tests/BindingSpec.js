@@ -1,6 +1,7 @@
 define([
   'Property',
   'ComputedProperty',
+  'List',
   'Parser',
   'Context',
 
@@ -9,7 +10,7 @@ define([
   'bindings/IteratorBinding'
 ],
 
-function(Property, ComputedProperty, Parser, Context, ValueBinding, EventBinding, IteratorBinding) {
+function(Property, ComputedProperty, List, Parser, Context, ValueBinding, EventBinding, IteratorBinding) {
 
   describe('ValueBinding', function() {
     var input,
@@ -180,22 +181,6 @@ function(Property, ComputedProperty, Parser, Context, ValueBinding, EventBinding
                       ].join('');
     });
 
-    it('should add and remove children as it\'s source list changes', function() {
-      var ul      = div.firstElementChild,
-          li      = ul.firstElementChild,
-          list    = new Property([]),
-          binding = new IteratorBinding(li, 'elem:list', new Context({ list: list }));
-
-      binding.bind();
-      expect(ul.children.length).toBe(0);
-
-      list.set([1, 2, 3]);
-      expect(ul.children.length).toBe(3);
-
-      list.set([1]);
-      expect(ul.children.length).toBe(1);
-    });
-
     it('should give iteration an extended Context', function() {
       var ul      = div.firstElementChild,
           li      = ul.firstElementChild,
@@ -210,6 +195,46 @@ function(Property, ComputedProperty, Parser, Context, ValueBinding, EventBinding
 
       expect(ul.children[0].context.lookup('elem')).toBe(1);
       expect(ul.children[1].context.lookup('elem')).toBe(2);
+    });
+
+    it('should add and remove children as it\'s source list changes', function() {
+      var ul      = div.firstElementChild,
+          li      = ul.firstElementChild,
+          list    = new Property([]),
+          binding = new IteratorBinding(li, 'elem:list', new Context({ list: list }));
+
+      binding.bind();
+      expect(ul.children.length).toBe(0);
+
+      list.set([1, 2, 3]);
+      expect(ul.children.length).toBe(3);
+
+      expect(ul.querySelector('li:nth-child(1) p').innerHTML).toBe('1');
+      expect(ul.querySelector('li:nth-child(2) p').innerHTML).toBe('2');
+      expect(ul.querySelector('li:nth-child(3) p').innerHTML).toBe('3');
+
+      list.set([1]);
+      expect(ul.children.length).toBe(1);
+    });
+
+    it('should properly bind to a List object', function() {
+      var ul      = div.firstElementChild,
+          li      = ul.firstElementChild,
+          list    = new List(),
+          binding = new IteratorBinding(li, 'elem:list', new Context({ list: list }));
+
+      binding.bind();
+      expect(ul.children.length).toBe(0);
+
+      list.push(1, 2, 3);
+      expect(ul.children.length).toBe(3);
+
+      expect(ul.querySelector('li:nth-child(1) p').innerHTML).toBe('1');
+      expect(ul.querySelector('li:nth-child(2) p').innerHTML).toBe('2');
+      expect(ul.querySelector('li:nth-child(3) p').innerHTML).toBe('3');
+
+      list.set([1]);
+      expect(ul.children.length).toBe(1);
     });
 
   });

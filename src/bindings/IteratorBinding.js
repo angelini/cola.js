@@ -3,10 +3,11 @@ define([
   'require',
 
   'Property',
+  'List',
   'Parser'
 ],
 
-function(_, require, Property, Parser) {
+function(_, require, Property, List, Parser) {
 
   function IteratorBinding(node, bindName, context) {
     var nameSplit = bindName.split(':');
@@ -16,12 +17,12 @@ function(_, require, Property, Parser) {
     }
 
     this.node      = node;
-    this.iteration = nameSplit[0];
     this.context   = context;
-    this.list      = context.lookup(nameSplit[1]);
+    this.items     = context.lookup(nameSplit[1]);
 
-    this.iterations  = [this.node];
-    this.commentNode = document.createComment('data-iterator-' + nameSplit[1]);
+    this.iterationName = nameSplit[0];
+    this.iterations    = [this.node];
+    this.commentNode   = document.createComment('data-iterator-' + nameSplit[1]);
 
     this.node.removeAttribute(IteratorBinding.ATTRIBUTE);
     this.parent = this.node.parentElement;
@@ -32,11 +33,26 @@ function(_, require, Property, Parser) {
   IteratorBinding.SKIP_CHILDREN = true;
 
   IteratorBinding.prototype.bind = function() {
-    this.parent.insertBefore(this.commentNode, this.node.nexElementSibling);
-    this.node.remove();
+    var self = this;
 
-    if (Property.isProperty(this.list)) {
-      this.list.on('change', this.createIterations.bind(this));
+    this.parent.insertBefore(this.commentNode, this.node.nexElementSibling);
+
+    if (Property.isProperty(this.items)) {
+      this.items.on('change', this.createIterations.bind(this));
+    }
+
+    if (List.isList(this.items)) {
+      this.items.on('update', this.update.bind(this));
+
+      this.items.on('add', function(newVals, indexes) {
+        _.each(newVals, function(newVal, iterationIndex) {
+          self.add(newVal, indexes[iterationIndex]);
+        });
+      });
+
+      this.items.on('remove', function(oldVals, indexes) {
+        self.remove(indexes);
+      });
     }
 
     this.createIterations();
@@ -45,32 +61,61 @@ function(_, require, Property, Parser) {
   };
 
   IteratorBinding.prototype.createIterations = function() {
-    var self = this,
-        list = Property.isProperty(this.list) ? this.list.get() : this.list;
+    var items,
+        self = this;
 
-    var count = 0;
-    _.each(list, function(element) {
-      var newNode,
-          newContext = {};
+    if (Property.isProperty(this.items) || List.isList(this.items)) {
+      items = this.items.get();
+    } else if (!this.items) {
+      items = [];
+    } else {
+      items = this.items;
+    }
 
-      if (self.iterations[count++]) {
-        newNode = self.iterations[count - 1];
+    _.each(items, function(element, index) {
+      if (self.iterations[index]) {
+        self.update(element, index);
       } else {
-        newNode = self.clone.cloneNode(true);
-        self.iterations.push(newNode);
+        self.add(element, index);
       }
-
-      var parser = new (require('Parser'))(newNode);
-
-      newContext[self.iteration] = element;
-      parser.parse(self.context.extend(newContext));
-
-      self.parent.insertBefore(newNode, self.commentNode);
     });
 
-    var extraCount = this.iterations.length - _.size(list);
-    _.times(Math.max(extraCount, 0), function() {
-      self.iterations.pop().remove();
+    var extraCount = this.iterations.length - items.length;
+
+    if (extraCount > 0) {
+      this.remove(_.range(items.length, items.length + extraCount));
+    }
+  };
+
+  IteratorBinding.prototype.update = function(element, index) {
+    var newContext = {},
+        newNode    = this.iterations[index],
+        parser     = new (require('Parser'))(newNode);
+
+    newContext[this.iterationName] = element;
+    parser.parse(this.context.extend(newContext));
+  };
+
+  IteratorBinding.prototype.add = function(element, index) {
+    var newContext = {},
+        newNode    = this.clone.cloneNode(true),
+        parser     = new (require('Parser'))(newNode);
+
+    this.iterations.splice(index, 0, newNode);
+
+    newContext[this.iterationName] = element;
+    parser.parse(this.context.extend(newContext));
+
+    var before = this.iterations[index + 1] || this.commentNode;
+    this.parent.insertBefore(newNode, before);
+  };
+
+  IteratorBinding.prototype.remove = function(indexes) {
+    this.iterations = _.reject(this.iterations, function(node, index) {
+      if (indexes.indexOf(index) >= 0) {
+        node.remove();
+        return true;
+      }
     });
   };
 
