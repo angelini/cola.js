@@ -12,8 +12,8 @@ function(_, require, EventEmitter, Property)  {
     return _.map(values, Property.toProperty);
   };
 
-  var watchValue = function(index) {
-    this.emit('update', this.at(index), index);
+  var watchValue = function(value) {
+    this.emit('update', value, this.values.indexOf(value));
   };
 
   function List(values) {
@@ -23,7 +23,7 @@ function(_, require, EventEmitter, Property)  {
     this.matchers  = [];
 
     _.each(this.values, function(value, index) {
-      value.on('change', self.matchers[index] = watchValue.bind(self, index));
+      value.on('change', self.matchers[index] = watchValue.bind(self, value));
     });
   }
 
@@ -51,6 +51,10 @@ function(_, require, EventEmitter, Property)  {
     return this.values;
   };
 
+  List.prototype.indexOf = function(value) {
+    return this.values.indexOf(value);
+  };
+
   List.prototype.clear = function() {
     var self = this,
         old  = this.values;
@@ -74,7 +78,7 @@ function(_, require, EventEmitter, Property)  {
         newVal = Property.toProperty(value);
 
     old.off('change', this.matchers[index]);
-    newVal.on('change', this.matchers[index] = watchValue.bind(this, index));
+    newVal.on('change', this.matchers[index] = watchValue.bind(this, newVal));
 
     this.values[index] = newVal;
     this.emit('update', newVal, index);
@@ -83,7 +87,7 @@ function(_, require, EventEmitter, Property)  {
   List.prototype.insert = function(index, value) {
     var newVal = Property.toProperty(value);
 
-    this.matchers.splice(index, 0, watchValue.bind(this, index));
+    this.matchers.splice(index, 0, watchValue.bind(this, newVal));
     newVal.on('change', this.matchers[index]);
 
     this.values.splice(index, 0, newVal);
@@ -102,17 +106,17 @@ function(_, require, EventEmitter, Property)  {
   };
 
   List.prototype.push = function() {
-    var self  = this,
-        args  = Array.prototype.slice.call(arguments),
-        props = toProperties(args),
-        old   = this.values;
+    var self    = this,
+        args    = Array.prototype.slice.call(arguments),
+        newVals = toProperties(args),
+        old     = this.values;
 
-    _.each(props, function(prop, index) {
-      prop.on('change', self.matchers[index] = watchValue.bind(self, index));
+    _.each(newVals, function(value, index) {
+      value.on('change', self.matchers[index] = watchValue.bind(self, value));
     });
 
-    this.values = this.values.concat(props);
-    this.emit('add', props, _.range(old.length, old.length + this.values.length));
+    this.values = this.values.concat(newVals);
+    this.emit('add', newVals, _.range(old.length, old.length + this.values.length));
   };
 
   return List;

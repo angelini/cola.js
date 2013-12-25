@@ -19,10 +19,10 @@ function(_, EventEmitter, List, ComputedProperty) {
         newMapped = mapValue(newVal, this.mapFn);
 
     old.off('change', this.matchers[index]);
-    newMapped.on('change', this.matchers[index] = watchValue.bind(this, index));
+    newMapped.on('change', this.matchers[index] = watchValue.bind(this, newVal));
 
     this.mapped[index] = newMapped;
-    this.emit('update', newMapped, old);
+    this.emit('update', newMapped, index);
   };
 
   var onAdd = function(newVals, indexes) {
@@ -36,7 +36,7 @@ function(_, EventEmitter, List, ComputedProperty) {
       var index = indexes[iterationIndex];
 
       self.mapped.splice(index, 0, comp);
-      self.matchers.splice(index, 0, watchValue.bind(self, index));
+      self.matchers.splice(index, 0, watchValue.bind(self, newVals[iterationIndex]));
 
       comp.on('change', self.matchers[index]);
     });
@@ -62,8 +62,8 @@ function(_, EventEmitter, List, ComputedProperty) {
     this.emit('remove', old, indexes);
   };
 
-  var watchValue = function(index) {
-    this.emit('update', this.at(index), index);
+  var watchValue = function(value) {
+    this.emit('update', value, this.list.indexOf(value));
   };
 
   function MappedList(values, mapFn) {
@@ -75,7 +75,7 @@ function(_, EventEmitter, List, ComputedProperty) {
 
     this.mapped = _.map(this.list.get(), function(value, index) {
       var comp = mapValue(value, mapFn);
-      comp.on('change', self.matchers[index] = watchValue.bind(self, index));
+      comp.on('change', self.matchers[index] = watchValue.bind(self, value));
       return comp;
     });
 

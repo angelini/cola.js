@@ -157,27 +157,23 @@ function(Property, ComputedProperty, List, MappedList, FilteredList) {
   });
 
   describe('FilteredList', function() {
-    var list;
+    var list,
+        filtered;
 
     beforeEach(function() {
-      list = new List([1, 2, 3, 4]);
+      list     = new List([1, 2, 3, 4]);
+      filtered = new FilteredList(list, function(item) {
+        return item.get() > 2;
+      });
     });
 
     it('should filter list elements using the input function', function() {
-      var filtered = new FilteredList(list, function(item) {
-        return item.get() > 2;
-      });
-
       expect(filtered.size()).toBe(2);
       expect(filtered.get()[0]).toEqual(jasmine.any(Property));
       expect(filtered.get()[1].get()).toBe(4);
     });
 
     it('should update as changing items pass the filter', function() {
-      var filtered = new FilteredList(list, function(item) {
-        return item.get() > 2;
-      });
-
       list.update(1, 5);
       expect(filtered.size()).toBe(3);
 
@@ -186,10 +182,11 @@ function(Property, ComputedProperty, List, MappedList, FilteredList) {
     });
 
     it('should update as other deps cause the filter to pass', function() {
-      var dep      = new Property(false),
-          filtered = new FilteredList(list, function(item) {
-            return dep.get() && item.get();
-          });
+      var dep      = new Property(false);
+
+      filtered = new FilteredList(list, function(item) {
+        return dep.get() && item.get();
+      });
 
       expect(filtered.size()).toBe(0);
 
@@ -198,35 +195,58 @@ function(Property, ComputedProperty, List, MappedList, FilteredList) {
     });
 
     it('should grow if newly added values pass the filter', function() {
-      var filtered = new FilteredList(list, function(item) {
-        return item.get() > 2;
-      });
-
       list.push(2, 5);
       expect(filtered.size()).toBe(3);
     });
 
     it('should shrink as passing values are removed', function() {
-      var filtered = new FilteredList(list, function(item) {
-        return item.get() > 2;
-      });
-
       list.remove(0);
       list.remove(2);
 
       expect(filtered.size()).toBe(1);
     });
 
-    it('should fire change events', function() {
-      var changeSpy = jasmine.createSpy('changeSpy'),
-          filtered = new FilteredList(list, function(item) {
-            return item.get() > 2;
-          });
+    it('should fire add events as values pass the filter', function() {
+      var addSpy   = jasmine.createSpy('addSpy');
 
-      filtered.on('change', changeSpy);
-      list.push(5);
+      filtered.on('add', addSpy);
 
-      expect(changeSpy).toHaveBeenCalledWith(filtered.get());
+      list.push(1);
+      expect(addSpy).not.toHaveBeenCalled();
+
+      list.at(0).set(5);
+      expect(addSpy).toHaveBeenCalledWith([jasmine.any(Property)], [0]);
+
+      list.push(5, 5);
+      expect(addSpy).toHaveBeenCalledWith([jasmine.any(Property), jasmine.any(Property)],
+                                          [3, 4]);
+    });
+
+    it('should fire remove events as values no longer pass the filter', function() {
+      var removeSpy = jasmine.createSpy('removeSpy');
+
+      filtered.on('remove', removeSpy);
+
+      list.remove(0);
+      expect(removeSpy).not.toHaveBeenCalled();
+
+      list.at(1).set(1);
+      expect(removeSpy).toHaveBeenCalledWith([jasmine.any(Property)], [0]);
+
+      list.remove(2);
+      expect(removeSpy).toHaveBeenCalledWith([jasmine.any(Property)], [0]);
+    });
+
+    it('should fire update events when a value changes', function() {
+      var updateSpy = jasmine.createSpy('updateSpy');
+
+      filtered.on('update', updateSpy);
+
+      list.at(1).set(0);
+      expect(updateSpy).not.toHaveBeenCalled();
+
+      list.at(2).set(10);
+      expect(updateSpy).toHaveBeenCalledWith(jasmine.any(Property), 0);
     });
 
   });
