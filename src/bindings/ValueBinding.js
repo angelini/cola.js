@@ -6,6 +6,27 @@ define([
 
 function(_, Property, ComputedProperty) {
 
+  var isNodeEditable = function(node) {
+    return ['INPUT', 'TEXTAREA', 'SELECT'].indexOf(node.nodeName) != -1;
+  };
+
+  var nodeValueProperty = function(node) {
+    switch (node.nodeName) {
+      case 'INPUT':
+        if (node.type == 'checkbox') return 'checked';
+        return 'value';
+
+      case 'TEXTAREA':
+        return 'value';
+
+      case 'SELECT':
+        return 'value';
+
+      default:
+        return 'innerHTML';
+    }
+  };
+
   function ValueBinding(node, bindName, context) {
     this.node  = node;
     this.value = context.lookup(bindName);
@@ -19,7 +40,7 @@ function(_, Property, ComputedProperty) {
     if (Property.isProperty(this.value)) {
       this.value.on('change', this.setNode.bind(this));
 
-      if (this.isNodeEditable(this.node) && !(this.value instanceof ComputedProperty)) {
+      if (isNodeEditable(this.node) && !(this.value instanceof ComputedProperty)) {
         _.each(['change', 'input', 'keyup'], function(eventName) {
           self.node.addEventListener('change', self.setValue.bind(self));
         });
@@ -29,10 +50,6 @@ function(_, Property, ComputedProperty) {
     this.setNode();
   };
 
-  ValueBinding.prototype.isNodeEditable = function(node) {
-    return ['INPUT', 'TEXTAREA', 'SELECT'].indexOf(node.nodeName.toUpperCase()) != -1;
-  };
-
   ValueBinding.prototype.setNode = function() {
     var value = Property.isProperty(this.value) ? this.value.get() : this.value;
 
@@ -40,15 +57,11 @@ function(_, Property, ComputedProperty) {
       value = '';
     }
 
-    if (this.isNodeEditable(this.node)) {
-      this.node.value = value;
-    } else {
-      this.node.innerHTML = value;
-    }
+    this.node[nodeValueProperty(this.node)] = value;
   };
 
   ValueBinding.prototype.setValue = function() {
-    this.value.set(this.node.value);
+    this.value.set(this.node[nodeValueProperty(this.node)]);
   };
 
   return ValueBinding;
